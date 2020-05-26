@@ -1,0 +1,11 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: PodSchedulingPolicy
+metadata:
+  name: psp-scheduler-name
+spec:
+  podSelector:
+    matchLabels:
+      app: etcd-statefulset
+      role: main
+  schedulerName: dedicated-worker-pool-scheduler
+    

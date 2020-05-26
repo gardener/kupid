@@ -1,0 +1,24 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: ClusterPodSchedulingPolicy
+metadata:
+  name: cpsp-node-selector-tolerations
+spec:
+  namespaceSelector: {}
+  podSelector:
+    matchLabels:
+      app: etcd-statefulset
+      role: events
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker-pool.gardener.cloud/dedicated-for
+            operator: In
+            values:
+            - etcd
+  tolerations:
+  - key: worker-pool.gardener.cloud/dedicated-for
+    operator: Equal
+    value: etcd
+    effect: NoSchedule

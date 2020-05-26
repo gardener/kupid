@@ -1,0 +1,18 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: PodSchedulingPolicy
+metadata:
+  name: psp-node-affinity
+spec:
+  podSelector:
+    matchLabels:
+      app: etcd-statefulset
+      role: main
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker-pool.gardener.cloud/dedicated-for
+            operator: In
+            values:
+            - etcd

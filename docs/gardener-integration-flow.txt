@@ -1,0 +1,21 @@
+title Sample gardener integration flow
+
+admin->gardener-apiserver:ControllerRegistration including kupid\nDeployment,\nMutatingWebhookConfiguration\nand ClusterPodSchedulingPolicy
+gardener-apiserver->gardenlet:Watch event for\ncontrollerregistration
+
+gardenlet->seed-apiserver:Install extensions including kupid\nDeployment,\nMutatingWebhookConfiguration\nand ClusterPodSchedulingPolicy
+gardenlet->gardener-apiserver:ControllerInstallation
+
+user->gardener-apiserver:Create/reconcile Shoot
+note over gardener-apiserver: Shoot scheduling is not shown here.
+gardener-apiserver->gardenlet:Watch event for created\n(or to-be-reconciled) Shoot
+note over seed-apiserver:Backups and other details for etcd including\nmutating webhooks are not shown here.\nAlso, other steps for shoot control-plane\ndeployment are not shown here.
+gardenlet->seed-apiserver:Etcd
+seed-apiserver->etcd-druid:Watch event for Etcd
+etcd-druid->seed-apiserver:StatefulSet
+seed-apiserver->statefulset controller:Watch event for\nStatefulSet
+statefulset controller->seed-apiserver:Pod
+seed-apiserver->kupid mutating webhook:AdmissionRequest for Pod
+kupid mutating webhook->kupid mutating webhook:Mutate pod based on specified\nClusterPodSchedulingPolicy
+seed-apiserver<--kupid mutating webhook:AdmissionResponse with mutated pod
+

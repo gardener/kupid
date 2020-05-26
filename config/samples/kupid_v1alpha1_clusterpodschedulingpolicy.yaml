@@ -1,0 +1,7 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: ClusterPodSchedulingPolicy
+metadata:
+  name: clusterpodschedulingpolicy-sample
+spec:
+  # Add fields here
+  foo: bar

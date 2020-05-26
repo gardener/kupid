@@ -1,0 +1,16 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: PodSchedulingPolicy
+metadata:
+  name: psp-node-selector-tolerations
+spec:
+  podSelector:
+    matchLabels:
+      app: etcd-statefulset
+      role: events
+  nodeSelector:
+    worker-pool.gardener.cloud/dedicated-for: etcd
+  tolerations:
+  - key: worker-pool.gardener.cloud/dedicated-for
+    operator: Equal
+    value: etcd
+    effect: NoSchedule

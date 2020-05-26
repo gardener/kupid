@@ -1,0 +1,14 @@
+resources:
+- deployment.yaml
+- service.yaml
+- mutating-webhook-config.yaml
+- validating-webhook-config.yaml
+
+configurations:
+- kustomizeconfig.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: webhook
+  newName: eu.gcr.io/gardener-project/gardener/kupid
+  newTag: v0.1.0-dev

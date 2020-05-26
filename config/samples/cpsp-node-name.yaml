@@ -1,0 +1,12 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: ClusterPodSchedulingPolicy
+metadata:
+  name: cpsp-node-name
+spec:
+  namespaceSelector: {}
+  podSelector:
+    matchLabels:
+      app: etcd-statefulset
+      role: main
+  nodeName: node-1
+    

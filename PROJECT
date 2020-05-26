@@ -1,0 +1,10 @@
+domain: gardener.cloud
+repo: github.com/gardener/kupid
+resources:
+- group: kupid
+  kind: PodSchedulingPolicy
+  version: v1alpha1
+- group: kupid
+  kind: ClusterPodSchedulingPolicy
+  version: v1alpha1
+version: "2"
