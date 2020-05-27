@@ -20,7 +20,7 @@ hvpa-controller:
                 build: ~
     steps:
       check:
-        image: 'golang:1.13.11
+        image: 'golang:1.13.11'
       test:
         image: 'golang:1.13.11'
       build:
