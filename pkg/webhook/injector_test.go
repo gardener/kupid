@@ -136,17 +136,17 @@ var _ = Describe("defaultInjectAffinity", func() {
 			Affinity: &corev1.Affinity{
 				NodeAffinity: &corev1.NodeAffinity{
 					PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
-						corev1.PreferredSchedulingTerm{
+						{
 							Preference: corev1.NodeSelectorTerm{
 								MatchExpressions: []corev1.NodeSelectorRequirement{
-									corev1.NodeSelectorRequirement{
+									{
 										Key:      "newPreferredExpressionKey",
 										Operator: corev1.NodeSelectorOpIn,
 										Values:   []string{"newPreferredExpressionValue"},
 									},
 								},
 								MatchFields: []corev1.NodeSelectorRequirement{
-									corev1.NodeSelectorRequirement{
+									{
 										Key:      "newPreferredFieldKey",
 										Operator: corev1.NodeSelectorOpIn,
 										Values:   []string{"newPreferredFieldValue"},
@@ -158,16 +158,16 @@ var _ = Describe("defaultInjectAffinity", func() {
 					},
 					RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 						NodeSelectorTerms: []corev1.NodeSelectorTerm{
-							corev1.NodeSelectorTerm{
+							{
 								MatchExpressions: []corev1.NodeSelectorRequirement{
-									corev1.NodeSelectorRequirement{
+									{
 										Key:      "newRequiredExpressionKey",
 										Operator: corev1.NodeSelectorOpIn,
 										Values:   []string{"newRequiredExpressionValue"},
 									},
 								},
 								MatchFields: []corev1.NodeSelectorRequirement{
-									corev1.NodeSelectorRequirement{
+									{
 										Key:      "newRequiredFieldKey",
 										Operator: corev1.NodeSelectorOpIn,
 										Values:   []string{"newRequiredFieldValue"},
@@ -190,17 +190,17 @@ var _ = Describe("defaultInjectAffinity", func() {
 					Affinity: &corev1.Affinity{
 						NodeAffinity: &corev1.NodeAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
-								corev1.PreferredSchedulingTerm{
+								{
 									Preference: corev1.NodeSelectorTerm{
 										MatchExpressions: []corev1.NodeSelectorRequirement{
-											corev1.NodeSelectorRequirement{
+											{
 												Key:      "oldPreferredExpressionKey",
 												Operator: corev1.NodeSelectorOpIn,
 												Values:   []string{"oldPreferredExpressionValue"},
 											},
 										},
 										MatchFields: []corev1.NodeSelectorRequirement{
-											corev1.NodeSelectorRequirement{
+											{
 												Key:      "oldPreferredFieldKey",
 												Operator: corev1.NodeSelectorOpIn,
 												Values:   []string{"oldPreferredFieldValue"},
@@ -212,16 +212,16 @@ var _ = Describe("defaultInjectAffinity", func() {
 							},
 							RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 								NodeSelectorTerms: []corev1.NodeSelectorTerm{
-									corev1.NodeSelectorTerm{
+									{
 										MatchExpressions: []corev1.NodeSelectorRequirement{
-											corev1.NodeSelectorRequirement{
+											{
 												Key:      "oldRequiredExpressionKey",
 												Operator: corev1.NodeSelectorOpIn,
 												Values:   []string{"oldRequiredExpressionValue"},
 											},
 										},
 										MatchFields: []corev1.NodeSelectorRequirement{
-											corev1.NodeSelectorRequirement{
+											{
 												Key:      "oldRequiredFieldKey",
 												Operator: corev1.NodeSelectorOpIn,
 												Values:   []string{"oldRequiredFieldValue"},
@@ -271,7 +271,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			Affinity: &corev1.Affinity{
 				PodAffinity: &corev1.PodAffinity{
 					PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-						corev1.WeightedPodAffinityTerm{
+						{
 							PodAffinityTerm: corev1.PodAffinityTerm{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
@@ -285,7 +285,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 						},
 					},
 					RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-						corev1.PodAffinityTerm{
+						{
 							LabelSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"requiredNewKey": "requiredNewValue",
@@ -309,7 +309,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 					Affinity: &corev1.Affinity{
 						PodAffinity: &corev1.PodAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-								corev1.WeightedPodAffinityTerm{
+								{
 									PodAffinityTerm: corev1.PodAffinityTerm{
 										LabelSelector: &metav1.LabelSelector{
 											MatchLabels: map[string]string{
@@ -323,7 +323,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 								},
 							},
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"requiredOldKey": "requiredOldValue",
@@ -369,7 +369,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			Affinity: &corev1.Affinity{
 				PodAntiAffinity: &corev1.PodAntiAffinity{
 					PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-						corev1.WeightedPodAffinityTerm{
+						{
 							PodAffinityTerm: corev1.PodAffinityTerm{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
@@ -383,7 +383,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 						},
 					},
 					RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-						corev1.PodAffinityTerm{
+						{
 							LabelSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"requiredNewKey": "requiredNewValue",
@@ -407,7 +407,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-								corev1.WeightedPodAffinityTerm{
+								{
 									PodAffinityTerm: corev1.PodAffinityTerm{
 										LabelSelector: &metav1.LabelSelector{
 											MatchLabels: map[string]string{
@@ -421,7 +421,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 								},
 							},
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"requiredOldKey": "requiredOldValue",
@@ -561,7 +561,7 @@ var _ = describeDefaultInjection(
 var _ = (func() bool {
 	var podSpec = &corev1.PodSpec{
 		Tolerations: []corev1.Toleration{
-			corev1.Toleration{
+			{
 				Key:      "newKey",
 				Operator: corev1.TolerationOpEqual,
 				Value:    "newValue",
@@ -578,7 +578,7 @@ var _ = (func() bool {
 		func() *corev1.PodSpec {
 			return &corev1.PodSpec{
 				Tolerations: []corev1.Toleration{
-					corev1.Toleration{
+					{
 						Key:      "oldKey",
 						Operator: corev1.TolerationOpEqual,
 						Value:    "oldValue",

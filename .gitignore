@@ -22,3 +22,8 @@ bin
 *.swp
 *.swo
 *~
+
+bin
+test/output
+
+.DS_Store

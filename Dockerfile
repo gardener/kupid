@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.13 as builder
+FROM golang:1.13.11 as builder
 
 WORKDIR /go/src/github.com/gardener/kupid
 # Copy the Go Modules manifests
