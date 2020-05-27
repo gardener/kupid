@@ -1,4 +1,4 @@
-hvpa-controller:
+kupid:
   template: 'default'
   base_definition:
     repo: ~
@@ -9,7 +9,7 @@ hvpa-controller:
         inject_effective_version: true
       publish:
         dockerimages:
-          hvpa-controller:
+          kupid:
             registry: 'gcr-readwrite'
             image: 'eu.gcr.io/gardener-project/gardener/kupid'
             dockerfile: 'Dockerfile'
