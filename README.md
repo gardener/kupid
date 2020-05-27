@@ -34,6 +34,10 @@ Inject scheduling criteria into target pods orthogonally by policy definition.
    - [Alternatives](#alternatives)
       - [Propagate flexibility up the chain](#propagate-flexibility-up-the-chain)
       - [Make assumptions](#make-assumptions)
+   - [Prior Art](#prior-art)
+      - [PodPreset](#podpreset)
+      - [Banzai Cloud Spot Config Webhook](#banzai-cloud-spot-config-webhook)
+      - [OPA Gatekeeper](#opa-gatekeeper)
 
 ## Goals
 
@@ -221,3 +225,21 @@ This suffers from polluting many layers with information that is not too relevan
 
 Make some assumptions about the pod scheduling mechanism at some level of deployment and management of the workload.
 This would not be flexible and will make it hard to change the pod scheduling behaviour.
+
+## Prior Art
+
+### `PodPreset`
+
+The standard [`PodPreset`](https://kubernetes.io/docs/concepts/workloads/pods/podpreset/) resource limits itself to the dynamic injection of only environment variables, secrets, configmaps, volumes and volume mounts into `pods`.
+There is mechanism to define and inject other fields (especially, those related to scheduling) into `pods`.
+
+### Banzai Cloud Spot Config Webhook
+
+The [spot-config-webhook](https://github.com/banzaicloud/spot-config-webhook) limits itself to the dynamic injection of the `schedulerName` into `pods`. There is no mechanism to define and inject other fields like `affinity`, `tolerations` etc.
+
+### OPA Gatekeeper
+
+The OPA [Gatekeeper](https://github.com/open-policy-agent/gatekeeper/) allows to define policy to validate and mutate any kubernetes resource.
+Technically, this can be used to dynamically inject anything, including scheduling policy into `pods`.
+But this is too big a component to introduce just to dynamically inject scheduling policy.
+Besides, the policy definition as code is undesirable in this context because the policy itself would be non-declarative and hard to validate while deploying the policy.

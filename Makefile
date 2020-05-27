@@ -27,13 +27,19 @@ update-dependencies:
 	@env GO111MODULE=on go get -u
 	@make revendor
 
+verify: check test
+
+# Run checks
+check:
+	@.ci/check
+
 # Run tests
 test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+	@.ci/test
 
 # Build webhook binary
 webhook: generate fmt vet
-	go build -v -mod vendor -o bin/kupid main.go
+	@.ci/build
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
