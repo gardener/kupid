@@ -1,0 +1,25 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kupid
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: kupid
+      path: /webhook
+  failurePolicy: Ignore
+  name: validate.kupid.gardener.cloud
+  rules:
+  - apiGroups:
+    - "kupid.gardener.cloud"
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusterpodschedulingpolicies
+    - podschedulingpolicies
+  sideEffects: None
+  timeoutSeconds: 30

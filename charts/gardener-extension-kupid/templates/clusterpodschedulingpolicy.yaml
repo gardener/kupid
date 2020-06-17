@@ -1,0 +1,26 @@
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: ClusterPodSchedulingPolicy
+metadata:
+  name: {{ include "name" . }}
+  labels:
+{{ include "labels" . | indent 4 }}
+spec:
+  namespaceSelector: {}
+  podSelector:
+    matchLabels:
+      app: etcd-statefulset
+      role: main
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: pool.worker.gardener.cloud/dedicated-for
+            operator: In
+            values:
+            - etcd
+  tolerations:
+  - key: pool.worker.gardener.cloud/dedicated-for
+    operator: Equal
+    value: etcd
+    effect: NoExecute

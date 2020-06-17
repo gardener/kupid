@@ -8,10 +8,11 @@ Inject scheduling criteria into target pods orthogonally by policy definition.
    - [Goals](#goals)
    - [Non-goals](#non-goals)
    - [Development Installation](#development-installation)
-      - [Pre-requisites](#pre-requisites)
-         - [kustomize](#kustomize)
-         - [cert-manager](#cert-manager)
-      - [kupid](#kupid-1)
+      - [Building the docker image](#building-the-docker-image)
+      - [Deploying kupid](#deploying-kupid)
+         - [Pre-requisites](#pre-requisites)
+         - [Using self-generated certificates](#using-self-generated-certificates)
+         - [Using cert-manager](#using-cert-manager)
    - [Context](#context)
       - [affinity](#affinity)
          - [nodeAffinity](#nodeaffinity)
@@ -31,6 +32,8 @@ Inject scheduling criteria into target pods orthogonally by policy definition.
       - [Pros](#pros)
       - [Cons](#cons)
       - [Mutating higher-order controllers](#mutating-higher-order-controllers)
+         - [Sequence Diagram](#sequence-diagram-1)
+         - [Gardener Integration Sequence Diagram](#gardener-integration-sequence-diagram-1)
    - [Alternatives](#alternatives)
       - [Propagate flexibility up the chain](#propagate-flexibility-up-the-chain)
       - [Make assumptions](#make-assumptions)
@@ -60,19 +63,10 @@ The steps for installing kupid on a Kubernetes cluster for development and/or tr
 These are only development installation steps and not intended for any kind of production scenarios.
 For anything other than development or trial purposes, please use your favourite CI/CD toolkit.
 
-### Pre-requisites
+### Building the docker image
 
-#### kustomize
-
-The development environment relies on [kustomize](https://github.com/kubernetes-sigs/kustomize).
-Please [install](https://github.com/kubernetes-sigs/kustomize/blob/master/docs/INSTALL.md) it in your development environment.
-
-#### cert-manager
-
-The development environment relies on [cert-manager](https://github.com/jetstack/cert-manager) to generate and configure the TLS certificates for validating and mutating webhooks of kupid.
-Please make sure the target Kubernetes cluster you want to deploy kupid to has a working [installation](https://cert-manager.io/docs/installation/kubernetes/) of cert-manager.
-
-### kupid
+The following steps explain how to build a docker image for kupid from the sources.
+It is an optional step and can be skipped if the upstream docker image can be used.
 
 1. Build kupid locally. This step is optional if you are using upstream container image for kupid.
 ```sh
@@ -86,10 +80,35 @@ $ make docker-build
 ```sh
 $ make docker-push
 ```
-4. Deploy kupid resources on the target Kubernetes cluster.
-This deploys the resources based on [`config/default/kustomization.yaml`](config/default/kustomization.yaml) which can be further customized (if required) before executing this step.
+
+### Deploying kupid
+
+Please follow the following steps to deploy kupid resources on the target Kubernetes cluster.
+
+#### Pre-requisites
+
+The development environment relies on [kustomize](https://github.com/kubernetes-sigs/kustomize).
+Please [install](https://github.com/kubernetes-sigs/kustomize/blob/master/docs/INSTALL.md) it in your development environment.
+
+#### Using self-generated certificates
+
+Kupid requires TLS certificates to be configures for its validating and mutating webhooks.
+Kupid optionally supports generating the required TLS certificates and the default `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` automatically.
+
+Deploy the resources based on [`config/default/kustomization.yaml`](config/default/kustomization.yaml) which can be further customized (if required) before executing this step.
 ```sh
 $ make deploy
+```
+
+#### Using cert-manager
+
+Alternatively, kupid can be deployed with externally generated TLS certificates and custom `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration`.
+Below is an example of doing this using [cert-manager](https://github.com/jetstack/cert-manager).
+Please make sure the target Kubernetes cluster you want to deploy kupid to has a working [installation](https://cert-manager.io/docs/installation/kubernetes/) of cert-manager.
+
+Deploy the resources based on [`config/using-certmanager/kustomization.yaml`](config/using-certmanager/kustomization.yaml) which can be further customized (if required) before executing this step.
+```sh
+$ make deploy-using-certmanager
 ```
 
 ## Context
@@ -135,7 +154,7 @@ An example of how it can used can be seen [here](https://raw.githubusercontent.c
 
 Kubernetes supports [multiple schedulers](https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/) that can schedule workload in it.
 The individual pods can declare which scheduler should scheduler them in the [`schedulerName`](https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/admin/sched/pod3.yaml).
-The additional schedulers should be separately deployed](https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/#define-a-kubernetes-deployment-for-the-scheduler), of course.
+The additional schedulers should be [separately deployed](https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/#define-a-kubernetes-deployment-for-the-scheduler), of course.
 
 ### `tolerations`
 
@@ -159,7 +178,7 @@ The proposed solution is to declare the pod scheduling criteria as described [ab
 
 ### Sequence Diagram
 
-![Sequence Diagram](docs/kupid-flow.svg)
+![Sequence Diagram](docs/kupid-flow-pods.svg)
 
 ### `PodSchedulingPolicy`
 
@@ -193,7 +212,7 @@ During merging, if there is a conflict between the already existing pod scheduli
 
 ### Gardener Integration Sequence Diagram
 
-![Gardener Integration Sequence Diagram](docs/gardener-integration-flow.svg)
+![Gardener Integration Sequence Diagram](docs/gardener-integration-flow-pods.svg)
 
 ### Pros
 
@@ -211,7 +230,15 @@ This solution has the following benefits.
 ### Mutating higher-order controllers
 
 Though this document talks about mutating `pods` dynamically to inject declaratively defined scheduling policies, in principle, it might be useful to mutate the pod templates in higher order controller resources like `replicationcontrollers`, `replicasets`, `deployments`, `statefulsets`, `daemonsets`, `jobs` and `cronjobs` instead of (or in addition to) mutating `pods` directly.
-This is supported by kupid. Which objects are mutated is now controllable in the [`MutatingWebhookConfiguration`](config/webhook/mutating-webhook-config.yaml).
+This is supported by kupid. Which objects are mutated is now controllable in the [`MutatingWebhookConfiguration`](config/webhook-config/mutating-webhook-config.yaml).
+
+#### Sequence Diagram
+
+![Sequence Diagram](docs/kupid-flow-controllers.svg)
+
+#### Gardener Integration Sequence Diagram
+
+![Gardener Integration Sequence Diagram](docs/gardener-integration-flow-controllers.svg)
 
 ## Alternatives
 

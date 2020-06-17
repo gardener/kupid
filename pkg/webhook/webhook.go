@@ -35,7 +35,8 @@ import (
 
 // +kubebuilder:rbac:groups=kupid.gardener.cloud,resources=clusterpodschedulingpolicies;podschedulingpolicies,verbs=get;list;watch;create;update;patch;delete
 
-const webhookPath = "/webhook"
+// WebhookPath is the path under which the webhook will be registered.
+const WebhookPath = "/webhook"
 
 var log = ctrl.Log.WithName("webhook")
 
@@ -178,7 +179,7 @@ func (w *Webhook) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	mgr.GetWebhookServer().Register(webhookPath, &admission.Webhook{Handler: w})
+	mgr.GetWebhookServer().Register(WebhookPath, &admission.Webhook{Handler: w})
 	log.Info("Webhook registered")
 
 	return nil
@@ -192,7 +193,7 @@ func (w *Webhook) InjectDecoder(d *admission.Decoder) error {
 
 // Handle handles admission requests.
 func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.Response {
-	log.Info("Handling", "req", req)
+	log.V(5).Info("Handling", "req", req)
 
 	w.waitForCacheSyncOnce(ctx.Done())
 
@@ -228,7 +229,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	if mutated, err := p.process(ctx, w.cache, namespace); err != nil {
 		return admission.Errored(http.StatusInternalServerError, err)
 	} else if !mutated {
-		log.Info("Nothing mutated", "obj", obj)
+		log.V(5).Info("Nothing mutated", "obj", obj)
 		return admission.Allowed("")
 	}
 
@@ -240,7 +241,9 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 
 	// Create the patch
 	res := admission.PatchResponseFromRaw(req.Object.Raw, marshalled)
-	log.Info("Response", "res", res)
+	if len(res.Patches) > 0 {
+		log.V(3).Info("Response", "res", res)
+	}
 
 	return res
 }

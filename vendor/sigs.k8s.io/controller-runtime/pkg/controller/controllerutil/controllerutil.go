@@ -19,8 +19,8 @@ package controllerutil
 import (
 	"context"
 	"fmt"
+	"reflect"
 
-	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,12 +49,12 @@ func newAlreadyOwnedError(Object metav1.Object, Owner metav1.OwnerReference) *Al
 	}
 }
 
-// SetControllerReference sets owner as a Controller OwnerReference on controlled.
-// This is used for garbage collection of the controlled object and for
-// reconciling the owner object on changes to controlled (with a Watch + EnqueueRequestForOwner).
+// SetControllerReference sets owner as a Controller OwnerReference on owned.
+// This is used for garbage collection of the owned object and for
+// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
 // Since only one OwnerReference can be a controller, it returns an error if
 // there is another OwnerReference with Controller flag set.
-func SetControllerReference(owner, controlled metav1.Object, scheme *runtime.Scheme) error {
+func SetControllerReference(owner, object metav1.Object, scheme *runtime.Scheme) error {
 	ro, ok := owner.(runtime.Object)
 	if !ok {
 		return fmt.Errorf("%T is not a runtime.Object, cannot call SetControllerReference", owner)
@@ -62,12 +62,12 @@ func SetControllerReference(owner, controlled metav1.Object, scheme *runtime.Sch
 
 	ownerNs := owner.GetNamespace()
 	if ownerNs != "" {
-		objNs := controlled.GetNamespace()
+		objNs := object.GetNamespace()
 		if objNs == "" {
 			return fmt.Errorf("cluster-scoped resource must not have a namespace-scoped owner, owner's namespace %s", ownerNs)
 		}
 		if ownerNs != objNs {
-			return fmt.Errorf("cross-namespace owner references are disallowed, owner's namespace %s, obj's namespace %s", owner.GetNamespace(), controlled.GetNamespace())
+			return fmt.Errorf("cross-namespace owner references are disallowed, owner's namespace %s, obj's namespace %s", owner.GetNamespace(), object.GetNamespace())
 		}
 	}
 
@@ -79,13 +79,13 @@ func SetControllerReference(owner, controlled metav1.Object, scheme *runtime.Sch
 	// Create a new ref
 	ref := *metav1.NewControllerRef(owner, schema.GroupVersionKind{Group: gvk.Group, Version: gvk.Version, Kind: gvk.Kind})
 
-	existingRefs := controlled.GetOwnerReferences()
+	existingRefs := object.GetOwnerReferences()
 	fi := -1
 	for i, r := range existingRefs {
 		if referSameObject(ref, r) {
 			fi = i
 		} else if r.Controller != nil && *r.Controller {
-			return newAlreadyOwnedError(controlled, r)
+			return newAlreadyOwnedError(object, r)
 		}
 	}
 	if fi == -1 {
@@ -95,7 +95,7 @@ func SetControllerReference(owner, controlled metav1.Object, scheme *runtime.Sch
 	}
 
 	// Update owner references
-	controlled.SetOwnerReferences(existingRefs)
+	object.SetOwnerReferences(existingRefs)
 	return nil
 }
 
@@ -111,7 +111,7 @@ func referSameObject(a, b metav1.OwnerReference) bool {
 		return false
 	}
 
-	return aGV.Group == bGV.Group && a.Kind == b.Kind && a.Name == b.Name
+	return aGV == bGV && a.Kind == b.Kind && a.Name == b.Name
 }
 
 // OperationResult is the action result of a CreateOrUpdate call
@@ -157,7 +157,7 @@ func CreateOrUpdate(ctx context.Context, c client.Client, obj runtime.Object, f 
 		return OperationResultNone, err
 	}
 
-	if equality.Semantic.DeepEqual(existing, obj) {
+	if reflect.DeepEqual(existing, obj) {
 		return OperationResultNone, nil
 	}
 

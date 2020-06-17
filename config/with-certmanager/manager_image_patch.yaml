@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller
+  namespace: test
+spec:
+  template:
+    spec:
+      containers:
+      - name: kupid
+      volumeMounts:
+        - mountPath: /var/kupid/certs
+          name: webhook-server-tls

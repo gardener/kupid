@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webhook
+  name: kupid
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -10,11 +10,7 @@ spec:
       labels: {}
     spec:
       containers:
-      - command:
-        - /kupid
-        - --cert-dir 
-        - /var/kupid/certs
-        image: webhook
+      - image: kupid
         imagePullPolicy: Always
         name: kupid
         ports:
@@ -28,12 +24,4 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-        volumeMounts:
-        - mountPath: /var/kupid/certs
-          name: webhook-server-tls
       terminationGracePeriodSeconds: 10
-      volumes:
-      - name: webhook-server-tls
-        secret:
-          defaultMode: 420
-          secretName: webhook-server-tls

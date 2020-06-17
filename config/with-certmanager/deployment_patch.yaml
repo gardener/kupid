@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kupid
+spec:
+  template:
+    spec:
+      containers:
+      - name: kupid
+        command:
+        - /kupid
+        - --cert-dir 
+        - /var/kupid/certs
+        volumeMounts:
+        - mountPath: /var/kupid/certs
+          name: certs
+      volumes:
+      - name: certs
+        secret:
+          defaultMode: 420
+          secretName: gardener-extension-webhook-cert

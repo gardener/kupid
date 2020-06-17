@@ -55,12 +55,21 @@ uninstall: manifests
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	cd config/webhook && kustomize edit set image webhook=${IMG}
+	cd config/webhook && kustomize edit set image kupid=${IMG}
 	kustomize build config/default | kubectl apply -f -
 
 # Undeploy controller from the configured Kubernetes cluster in ~/.kube/config
 undeploy: manifests
 	kustomize build config/default | kubectl delete -f -
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy-with-certmanager: manifests
+	cd config/webhook && kustomize edit set image kupid=${IMG}
+	kustomize build config/with-certmanager | kubectl apply -f -
+
+# Undeploy controller from the configured Kubernetes cluster in ~/.kube/config
+undeploy-with-certmanager: manifests
+	kustomize build config/with-certmanager | kubectl delete -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -77,6 +86,7 @@ vet:
 # Generate code
 generate: controller-gen
 	"$(CONTROLLER_GEN)" object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	@./vendor/github.com/gardener/gardener/hack/generate.sh ./charts/...
 
 # Build the docker image
 docker-build: test

@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: webhook
+  name: kupid
 spec:
   ports:
-  - port: 9443
+  - port: 443
     name: webhook
     targetPort: 9443
   - port: 8080

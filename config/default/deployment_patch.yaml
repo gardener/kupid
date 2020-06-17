@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kupid
+spec:
+  template:
+    spec:
+      containers:
+      - name: kupid
+        command:
+        - /kupid
+        - --cert-dir 
+        - /var/kupid/certs
+        - --register-webhooks=true
+        env:
+          - name: WEBHOOK_CONFIG_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        volumeMounts:
+        - mountPath: /var/kupid/certs
+          name: certs
+      volumes:
+      - name: certs
+        emptyDir: {}

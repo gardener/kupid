@@ -1,0 +1,20 @@
+image:
+  repository: eu.gcr.io/gardener-project/gardener/kupid
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 20Mi
+
+vpa:
+  enabled: true
+  updatePolicy:
+    updateMode: "Auto"
+ 
+webhookConfig:
+  serverPort: 9443
+  timeoutSeconds: 30

@@ -5,14 +5,14 @@
 apiVersion: cert-manager.io/v1alpha2
 kind: Issuer
 metadata:
-  name: selfsigned-issuer
+  name: kupid-cert
 spec:
   selfSigned: {}
 ---
 apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
-  name: serving-cert  # this name should match the one appeared in kustomizeconfig.yaml
+  name: kupid-cert # this name should match the one appeared in kustomizeconfig.yaml
 spec:
   # $(SERVICE_NAME) and $(SERVICE_NAMESPACE) will be substituted by kustomize
   dnsNames:
@@ -20,5 +20,5 @@ spec:
   - $(SERVICE_NAME).$(SERVICE_NAMESPACE).svc.cluster.local
   issuerRef:
     kind: Issuer
-    name: selfsigned-issuer
-  secretName: webhook-server-tls # this secret will not be prefixed, since it's not managed by kustomize
+    name: kupid-cert
+  secretName: gardener-extension-webhook-cert # this secret will not be prefixed, since it's not managed by kustomize
