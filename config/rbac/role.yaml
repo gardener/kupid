@@ -1,10 +1,9 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: webhook-role
+  name: kupid
 rules:
 - apiGroups:
   - kupid.gardener.cloud
@@ -25,4 +24,34 @@ rules:
   verbs:
   - get
   - list
+  - watch
+- apiGroups: [ "admissionregistration.k8s.io" ]
+  resources:
+  - validatingwebhookconfigurations
+  - mutatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kupid
+rules:
+- apiGroups: [ "" ]
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
   - watch

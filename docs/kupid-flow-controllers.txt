@@ -1,0 +1,12 @@
+title kupid flow
+
+user/controller->kube-apiserver:ClusterPodSchedulingPolicy
+user/controller->kube-apiserver:Create StatefulSet
+
+kube-apiserver->Mutating Webhook:AdmissionRequest for the created StatefulSet
+Mutating Webhook->Mutating Webhook:Find applicable ClusterPodSchedulingPolicy
+Mutating Webhook->Mutating Webhook:Mutate the pod template in the StatefulSet\nby applying the specified scheduling policy
+kube-apiserver<--Mutating Webhook:AdmissionResponse with mutated StatefulSet
+user/controller<--kube-apiserver: StatefulSet Created
+kube-apiserver->statefulset controller:Watch event for\nStatefulSet
+statefulset controller->kube-apiserver: Create Pod based on the mutated template

@@ -1,0 +1,41 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "name" . }}
+  labels:
+{{ include "labels" . | indent 4 }}
+rules:
+- apiGroups:
+  - kupid.gardener.cloud
+  resources:
+  - clusterpodschedulingpolicies
+  - podschedulingpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups: [ "" ]
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: [ "admissionregistration.k8s.io" ]
+  resources:
+  - validatingwebhookconfigurations
+  - mutatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

@@ -1,0 +1,27 @@
+---
+apiVersion: core.gardener.cloud/v1beta1
+kind: ControllerRegistration
+metadata:
+  name: kupid
+spec:
+  resources:
+  - kind: ClusterPorSchedulingPolicy
+    type: kubernetes
+    primary: true
+  - kind: PorSchedulingPolicy
+    type: kubernetes
+    primary: true
+  deployment:
+    type: helm
+    policy: Always
+    seedSelector:
+      matchExpressions:
+        - key: pool.worker.gardener.cloud/dedicated-for
+          operator: In
+          values:
+          - etcd
+    providerConfig:
+      chart: Cg==
+      values:
+        image:
+          tag: v0.1.0-dev

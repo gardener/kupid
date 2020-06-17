@@ -1,11 +1,25 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: webhook-rolebinding
+  name: kupid
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: webhook-role
+  name: kupid
+subjects:
+- kind: ServiceAccount
+  name: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kupid
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kupid
 subjects:
 - kind: ServiceAccount
   name: default

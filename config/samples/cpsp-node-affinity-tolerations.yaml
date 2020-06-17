@@ -7,18 +7,18 @@ spec:
   podSelector:
     matchLabels:
       app: etcd-statefulset
-      role: events
+      role: main
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: worker-pool.gardener.cloud/dedicated-for
+          - key: pool.worker.gardener.cloud/dedicated-for
             operator: In
             values:
             - etcd
   tolerations:
-  - key: worker-pool.gardener.cloud/dedicated-for
+  - key: pool.worker.gardener.cloud/dedicated-for
     operator: Equal
     value: etcd
-    effect: NoSchedule
+    effect: NoExecute

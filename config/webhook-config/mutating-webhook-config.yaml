@@ -1,0 +1,56 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kupid
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: kupid
+      path: /webhook
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  name: mutate.kupid.gardener.cloud
+  reinvocationPolicy: IfNeeded
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - replicationcontrollers
+  - apiGroups:
+    - "apps"
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+  #  - daemonsets
+    - deployments
+  #  - replicasets
+    - statefulsets
+  - apiGroups:
+    - "batch"
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - jobs
+  - apiGroups:
+    - "batch"
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - cronjobs
+  sideEffects: None
+  timeoutSeconds: 30

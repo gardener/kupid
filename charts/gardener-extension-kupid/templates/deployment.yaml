@@ -1,0 +1,52 @@
+apiVersion: {{ include "deploymentversion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "labels" . | indent 4 }}
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ include "name" . }}
+      containers:
+      - name: kupid
+        image: {{ include "image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /kupid
+        - --webhook-port={{ .Values.webhookConfig.serverPort }}
+        - --register-webhooks=true
+        - --webhook-timeout-seconds={{ .Values.webhookConfig.timeoutSeconds }}
+        - --cert-dir=/var/kupid/certs
+        - --v=info
+        env:
+        - name: WEBHOOK_CONFIG_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: {{ .Values.webhookConfig.serverPort }}
+          name: webhook-server
+          protocol: TCP
+        - containerPort: 8080
+          name: metrics
+          protocol: TCP
+{{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | nindent 10 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /var/kupid/certs
+          name: certs
+      volumes:
+      - name: certs
+        emptyDir: {}

@@ -73,22 +73,22 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, reader client.Reader
 		podLabels = p.getPodLabels()
 	)
 
-	log.Info("Beginning of mutate", "obj", obj)
+	log.V(5).Info("Beginning of mutate", "obj", obj)
 
 	csps, err := p.getAllClusterSchedulingPolicies(ctx, reader)
-	log.Info("ClusterSchedulingPolicies", "csps", csps, "Error", err)
+	log.V(5).Info("ClusterSchedulingPolicies", "csps", csps, "Error", err)
 	if err != nil {
 		return false, err
 	}
 
 	ns, err := p.getNamespace(ctx, reader, namespace)
-	log.Info("Namespace", "ns", ns, "Error", err)
+	log.V(5).Info("Namespace", "ns", ns, "Error", err)
 	if err != nil {
 		return false, err
 	}
 
 	sps, err := p.getAllSchedulingPoliciesInNamespace(ctx, reader, namespace)
-	log.Info("SchedulingPolicies", "sps", sps, "Error", err)
+	log.V(5).Info("SchedulingPolicies", "sps", sps, "Error", err)
 	if err != nil {
 		return false, err
 	}
@@ -117,7 +117,7 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, reader client.Reader
 		}
 	})
 
-	log.Info("Applicable scheduling policy configuration", "spcs", spcs)
+	log.V(4).Info("Applicable scheduling policy configuration", "spcs", spcs)
 	if len(spcs) <= 0 {
 		return false, nil
 	}
@@ -187,7 +187,7 @@ func (p *podSpecProcessorImpl) filterClusterSchedulingPolicies(csps []kupidv1alp
 		if s, err := metav1.LabelSelectorAsSelector(csp.Spec.NamespaceSelector); err != nil {
 			return filtered, err
 		} else if !s.Matches(labels.Set(ns.Labels)) {
-			log.Info("namespaceSelector match failed", "selector", s, "labels", ns.Labels)
+			log.V(4).Info("namespaceSelector match failed", "selector", s, "labels", ns.Labels)
 			continue
 		}
 
@@ -196,7 +196,7 @@ func (p *podSpecProcessorImpl) filterClusterSchedulingPolicies(csps []kupidv1alp
 		} else if s.Matches(labels.Set(podLabels)) {
 			filtered = append(filtered, csp)
 		} else {
-			log.Info("podSelector match failed", "selector", s, "labels", podLabels)
+			log.V(4).Info("podSelector match failed", "selector", s, "labels", podLabels)
 		}
 	}
 
