@@ -263,6 +263,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	res := admission.PatchResponseFromRaw(req.Object.Raw, marshalled)
 	if len(res.Patches) > 0 {
 		l.V(1).Info("Mutated response", "res", res)
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeMutated}).Inc()
 	}
 
