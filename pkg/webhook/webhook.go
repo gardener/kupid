@@ -28,9 +28,11 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // +kubebuilder:rbac:groups=kupid.gardener.cloud,resources=clusterpodschedulingpolicies;podschedulingpolicies,verbs=get;list;watch;create;update;patch;delete
@@ -182,6 +184,8 @@ func (w *Webhook) SetupWithManager(mgr ctrl.Manager) error {
 	mgr.GetWebhookServer().Register(WebhookPath, &admission.Webhook{Handler: w})
 	log.Info("Webhook registered")
 
+	mgr.AddHealthzCheck("webhook", func(req *http.Request) error { return nil })
+
 	return nil
 }
 
@@ -193,20 +197,25 @@ func (w *Webhook) InjectDecoder(d *admission.Decoder) error {
 
 // Handle handles admission requests.
 func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.Response {
-	log.V(5).Info("Handling", "req", req)
+	l := log.WithValues("resource", req.Resource, "namespace", req.Namespace, "name", req.Name)
+
+	l.V(1).Info("Handling", "req", req)
 
 	w.waitForCacheSyncOnce(ctx.Done())
+
+	kupidRequestsTotal.With(prometheus.Labels{labelType: typeProcessed}).Inc()
 
 	//Get the namespace in the request
 	namespace := req.Namespace
 
 	pf, err := w.getProcessorFactoryFor(req.Kind)
 	if err != nil {
-		log.Error(err, "kind", req.Kind)
+		l.Error(err, "Error getting processor factory")
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
 		return admission.Errored(http.StatusInternalServerError, err)
 	}
 
-	p := pf.newProcessor()
+	p := pf.newProcessor(l)
 
 	if into, ok := p.(injectSchedulingPolicyInjector); ok {
 		into.injectSchedulingPolicyInjector(w.getInjector())
@@ -216,33 +225,45 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 
 	err = w.decoder.Decode(req, obj)
 	if err != nil {
+		l.Error(err, "Error decoding admission request object")
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
 	if !pf.isMutating() {
 		if _, err := p.process(ctx, w.cache, namespace); err != nil {
+			l.Error(err, "Error processing admission request")
+			kupidRequestsTotal.With(prometheus.Labels{labelType: typeDenied}).Inc()
 			return admission.Denied(err.Error())
 		}
+
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
 		return admission.Allowed("")
 	}
 
 	if mutated, err := p.process(ctx, w.cache, namespace); err != nil {
+		l.Error(err, "Error processing admission request")
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
 		return admission.Errored(http.StatusInternalServerError, err)
 	} else if !mutated {
-		log.V(5).Info("Nothing mutated", "obj", obj)
+		l.V(1).Info("Nothing mutated", "obj", obj)
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
 		return admission.Allowed("")
 	}
 
 	obj = p.getObject()
 	marshalled, err := json.Marshal(obj)
 	if err != nil {
+		l.Error(err, "Error marshalling mutated object for admission response")
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
 		return admission.Errored(http.StatusInternalServerError, err)
 	}
 
 	// Create the patch
 	res := admission.PatchResponseFromRaw(req.Object.Raw, marshalled)
 	if len(res.Patches) > 0 {
-		log.V(3).Info("Response", "res", res)
+		l.V(1).Info("Mutated response", "res", res)
+		kupidRequestsTotal.With(prometheus.Labels{labelType: typeMutated}).Inc()
 	}
 
 	return res
@@ -254,4 +275,35 @@ func (w *Webhook) getInjector() schedulingPolicyInjector {
 	}
 
 	return w.injector
+}
+
+const (
+	kupidNamespace     = "kupid"
+	subsystemAggregate = "aggr"
+	labelType          = "type"
+	typeProcessed      = "processed"
+	typeAllowed        = "allowed"
+	typeDenied         = "denied"
+	typeMutated        = "mutated"
+	typeError          = "error"
+)
+
+var (
+	kupidRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: kupidNamespace,
+			Subsystem: subsystemAggregate,
+			Name:      "requests_total",
+			Help:      "The accumulated total number of requests processed by kupid.",
+		},
+		[]string{labelType},
+	)
+)
+
+func init() {
+	for _, lt := range []string{typeProcessed, typeAllowed, typeDenied, typeMutated, typeError} {
+		kupidRequestsTotal.With(prometheus.Labels{labelType: lt}).Add(0)
+	}
+
+	metrics.Registry.MustRegister(kupidRequestsTotal)
 }

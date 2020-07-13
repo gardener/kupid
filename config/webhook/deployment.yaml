@@ -13,11 +13,20 @@ spec:
       - image: kupid
         imagePullPolicy: Always
         name: kupid
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
         ports:
         - containerPort: 9443
           name: webhook
           protocol: TCP
         - containerPort: 8080
+          name: healthz
+          protocol: TCP
+        - containerPort: 8081
           name: metrics
           protocol: TCP
         resources:

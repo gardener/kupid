@@ -19,6 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
+	"github.com/go-logr/logr"
 )
 
 // podSchedulingPolicyProcessorFactory implements the processFactory interface to validate podschedulingpolicies.
@@ -32,7 +33,7 @@ func (pf *podSchedulingPolicyProcessorFactory) kind() metav1.GroupVersionKind {
 	}
 }
 
-func (pf *podSchedulingPolicyProcessorFactory) newProcessor() processor {
+func (pf *podSchedulingPolicyProcessorFactory) newProcessor(logger logr.Logger) processor {
 	return &podSchedulingPolicyConfigurationProcessor{
 		podSchedulingPolicyConfigurationValidator: &podSchedulingPolicyConfigurationValidatorImpl{
 			podSchedulingPolicyConfigurationValidatorCallbacks: &podSchedulingPolicyValidatorCallbacks{},

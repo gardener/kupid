@@ -28,12 +28,13 @@ import (
 
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
 	"github.com/gardener/kupid/pkg/common"
+	"github.com/go-logr/logr"
 )
 
 type processorFactory interface {
 	kind() metav1.GroupVersionKind
 	isMutating() bool
-	newProcessor() processor
+	newProcessor(logr.Logger) processor
 }
 
 type objectGetter interface {
@@ -60,6 +61,7 @@ type injectSchedulingPolicyInjector interface {
 type podSpecProcessorImpl struct {
 	podSpecCallbacks
 	injector schedulingPolicyInjector
+	logger   logr.Logger
 }
 
 func (p *podSpecProcessorImpl) injectSchedulingPolicyInjector(injector schedulingPolicyInjector) {
@@ -71,24 +73,25 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, reader client.Reader
 		obj       = p.getObject()
 		podSpec   = p.getPodSpec()
 		podLabels = p.getPodLabels()
+		l         = p.logger
 	)
 
-	log.V(5).Info("Beginning of mutate", "obj", obj)
+	l.V(1).Info("Beginning of mutate", "obj", obj)
 
 	csps, err := p.getAllClusterSchedulingPolicies(ctx, reader)
-	log.V(5).Info("ClusterSchedulingPolicies", "csps", csps, "Error", err)
+	l.V(1).Info("ClusterSchedulingPolicies", "csps", csps, "Error", err)
 	if err != nil {
 		return false, err
 	}
 
 	ns, err := p.getNamespace(ctx, reader, namespace)
-	log.V(5).Info("Namespace", "ns", ns, "Error", err)
+	l.V(1).Info("Namespace", "ns", ns, "Error", err)
 	if err != nil {
 		return false, err
 	}
 
 	sps, err := p.getAllSchedulingPoliciesInNamespace(ctx, reader, namespace)
-	log.V(5).Info("SchedulingPolicies", "sps", sps, "Error", err)
+	l.V(1).Info("SchedulingPolicies", "sps", sps, "Error", err)
 	if err != nil {
 		return false, err
 	}
@@ -117,7 +120,7 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, reader client.Reader
 		}
 	})
 
-	log.V(4).Info("Applicable scheduling policy configuration", "spcs", spcs)
+	l.V(1).Info("Applicable scheduling policy configuration", "spcs", spcs)
 	if len(spcs) <= 0 {
 		return false, nil
 	}
@@ -179,7 +182,10 @@ func (p *podSpecProcessorImpl) getNamespace(ctx context.Context, reader client.R
 }
 
 func (p *podSpecProcessorImpl) filterClusterSchedulingPolicies(csps []kupidv1alpha1.ClusterPodSchedulingPolicy, ns *corev1.Namespace, podLabels map[string]string) ([]common.PodSchedulingPolicyConfiguration, error) {
-	var filtered []common.PodSchedulingPolicyConfiguration
+	var (
+		filtered []common.PodSchedulingPolicyConfiguration
+		l        = p.logger
+	)
 
 	for i := range csps {
 		csp := &csps[i]
@@ -187,7 +193,7 @@ func (p *podSpecProcessorImpl) filterClusterSchedulingPolicies(csps []kupidv1alp
 		if s, err := metav1.LabelSelectorAsSelector(csp.Spec.NamespaceSelector); err != nil {
 			return filtered, err
 		} else if !s.Matches(labels.Set(ns.Labels)) {
-			log.V(4).Info("namespaceSelector match failed", "selector", s, "labels", ns.Labels)
+			l.V(1).Info("namespaceSelector match failed", "selector", s, "labels", ns.Labels)
 			continue
 		}
 
@@ -196,7 +202,7 @@ func (p *podSpecProcessorImpl) filterClusterSchedulingPolicies(csps []kupidv1alp
 		} else if s.Matches(labels.Set(podLabels)) {
 			filtered = append(filtered, csp)
 		} else {
-			log.V(4).Info("podSelector match failed", "selector", s, "labels", podLabels)
+			l.V(1).Info("podSelector match failed", "selector", s, "labels", podLabels)
 		}
 	}
 

@@ -5,6 +5,9 @@ image:
 
 replicaCount: 1
 
+logging:
+  level: info
+
 resources:
   requests:
     cpu: 100m
