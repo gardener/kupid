@@ -7,10 +7,10 @@ spec:
   resources:
   - kind: ClusterPorSchedulingPolicy
     type: kubernetes
-    primary: true
+    primary: false
   - kind: PorSchedulingPolicy
     type: kubernetes
-    primary: true
+    primary: false
   deployment:
     type: helm
     policy: Always

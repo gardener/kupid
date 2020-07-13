@@ -54,6 +54,7 @@ const (
 
 	flagWebhookPort           = "webhook-port"
 	flagMetricsAddr           = "metrics-addr"
+	flagHealthzAddr           = "healthz-addr"
 	flagCertDir               = "cert-dir"
 	flagRegisterWebhooks      = "register-webhooks"
 	flagWebhookTimeoutSeconds = "webhook-timeout-seconds"
@@ -61,6 +62,8 @@ const (
 
 	defaultWebhookPort           = 9443
 	defaultWebhookTimeoutSeconds = 30
+	defaultMetricsAddr           = ":8081"
+	defaultHealthzAddr           = ":8080"
 )
 
 func init() {
@@ -77,6 +80,7 @@ func main() {
 	var (
 		webhookPort           int
 		metricsAddr           string
+		healthzAddr           string
 		certDir               string
 		registerWebhooks      bool
 		webhookTimeoutSeconds int
@@ -85,7 +89,8 @@ func main() {
 	)
 
 	flag.IntVar(&webhookPort, flagWebhookPort, defaultWebhookPort, "The port for the webhook server to listen on.")
-	flag.StringVar(&metricsAddr, flagMetricsAddr, ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, flagMetricsAddr, defaultMetricsAddr, "The address the metric endpoint binds to.")
+	flag.StringVar(&healthzAddr, flagHealthzAddr, defaultHealthzAddr, "The address the healthz endpoint binds to.")
 	flag.StringVar(&certDir, flagCertDir, "./certs", "The directory where the serving certs are kept.")
 	flag.BoolVar(&registerWebhooks, flagRegisterWebhooks, false, "If enabled registers the webhook configurations automatically. The webhook is assumed to be reachable by a service with the name 'gardener-extension-kupid' within the same namespace. If necessary this will also generate TLS certificates for the webhook as well as the webhook configurations. The generated certificates will be published by creating a secret with the name 'gardener-extension-webhook-cert'. If the secret already exists then it is reused and no new certificates are generated.")
 	flag.IntVar(&webhookTimeoutSeconds, flagWebhookTimeoutSeconds, defaultWebhookTimeoutSeconds, "If webhooks are registered automatically then they are configured with this timeout.")
@@ -93,7 +98,7 @@ func main() {
 	flag.Parse()
 
 	level := uberzap.NewAtomicLevelAt(*logLevel)
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.Level(&level)))
+	ctrl.SetLogger(zap.New(zap.Level(&level)))
 
 	namespace = os.Getenv(envNamespace)
 
@@ -105,9 +110,10 @@ func main() {
 		envNamespace, namespace)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		Port:               webhookPort,
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		Port:                   webhookPort,
+		HealthProbeBindAddress: healthzAddr,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

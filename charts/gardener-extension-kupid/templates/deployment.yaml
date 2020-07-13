@@ -27,17 +27,28 @@ spec:
         - --register-webhooks=true
         - --webhook-timeout-seconds={{ .Values.webhookConfig.timeoutSeconds }}
         - --cert-dir=/var/kupid/certs
-        - --v=info
+{{- if .Values.logging.level }}
+        - --v={{ .Values.logging.level }}
+{{- end }}
         env:
         - name: WEBHOOK_CONFIG_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
         ports:
         - containerPort: {{ .Values.webhookConfig.serverPort }}
           name: webhook-server
           protocol: TCP
         - containerPort: 8080
+          name: healthz
+          protocol: TCP
+        - containerPort: 8081
           name: metrics
           protocol: TCP
 {{- if .Values.resources }}

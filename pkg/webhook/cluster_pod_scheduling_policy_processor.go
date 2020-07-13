@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
+	"github.com/go-logr/logr"
 )
 
 // clusterPodSchedulingPolicyProcessorFactory implements the processFactory interface to validate clusterpodschedulingpolicies.
@@ -34,7 +35,7 @@ func (pf *clusterPodSchedulingPolicyProcessorFactory) kind() metav1.GroupVersion
 	}
 }
 
-func (pf *clusterPodSchedulingPolicyProcessorFactory) newProcessor() processor {
+func (pf *clusterPodSchedulingPolicyProcessorFactory) newProcessor(logger logr.Logger) processor {
 	var cpspValidator = &clusterPodSchedulingPolicyValidatorImpl{}
 	cpspValidator.podSchedulingPolicyConfigurationValidator = &podSchedulingPolicyConfigurationValidatorImpl{
 		podSchedulingPolicyConfigurationValidatorCallbacks: cpspValidator,

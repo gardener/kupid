@@ -15,6 +15,7 @@
 package webhook
 
 import (
+	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,9 +33,10 @@ func (pf *jobProcessorFactory) kind() metav1.GroupVersionKind {
 	}
 }
 
-func (pf *jobProcessorFactory) newProcessor() processor {
+func (pf *jobProcessorFactory) newProcessor(logger logr.Logger) processor {
 	return &podSpecProcessorImpl{
 		podSpecCallbacks: &jobCallbacks{},
+		logger:           logger,
 	}
 }
 
