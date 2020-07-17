@@ -266,7 +266,16 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 	return obj, func() error {
 		obj.Webhooks = []admissionregistrationv1beta1.MutatingWebhook{
 			{
-				Name:         "mutate." + kupidv1alpha1.GroupVersion.Group,
+				Name: "mutate." + kupidv1alpha1.GroupVersion.Group,
+				NamespaceSelector: &metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						metav1.LabelSelectorRequirement{
+							Key:      "role",
+							Operator: metav1.LabelSelectorOpNotIn,
+							Values:   []string{"kube-system"},
+						},
+					},
+				},
 				ClientConfig: clientConfig,
 				Rules: []admissionregistrationv1beta1.RuleWithOperations{
 					buildRuleWithOperations(appsv1.SchemeGroupVersion, []string{

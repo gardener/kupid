@@ -11,6 +11,11 @@ webhooks:
   failurePolicy: Ignore
   matchPolicy: Equivalent
   name: mutate.kupid.gardener.cloud
+  namespaceSelector:
+    matchExpressions:
+    - key: role
+      operator: NotIn
+      values: [ "kube-system" ] 
   reinvocationPolicy: IfNeeded
   rules:
   - apiGroups:
