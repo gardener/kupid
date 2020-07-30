@@ -11,10 +11,16 @@ logging:
 resources:
   requests:
     cpu: 100m
-    memory: 20Mi
+    memory: 64M
+  limits:
+    cpu: 200m
+    memory: 256M
 
 vpa:
   enabled: true
+  minAllowed:
+    cpu: 100m
+    memory: 64M
   updatePolicy:
     updateMode: "Auto"
  
