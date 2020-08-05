@@ -18,6 +18,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"time"
 
 	uberzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -26,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -58,12 +60,16 @@ const (
 	flagCertDir               = "cert-dir"
 	flagRegisterWebhooks      = "register-webhooks"
 	flagWebhookTimeoutSeconds = "webhook-timeout-seconds"
+	flagSyncPeriod            = "sync-period"
+	flagQPS                   = "qps"
+	flagBurst                 = "burst"
 	envNamespace              = "WEBHOOK_CONFIG_NAMESPACE"
 
 	defaultWebhookPort           = 9443
 	defaultWebhookTimeoutSeconds = 30
 	defaultMetricsAddr           = ":8081"
 	defaultHealthzAddr           = ":8080"
+	defaultSyncPeriod            = 1 * time.Hour
 )
 
 func init() {
@@ -84,6 +90,9 @@ func main() {
 		certDir               string
 		registerWebhooks      bool
 		webhookTimeoutSeconds int
+		syncPeriod            time.Duration
+		qps                   float64
+		burst                 int
 		namespace             string
 		logLevel              = uberzap.LevelFlag("v", zapcore.InfoLevel, "Logging level")
 	)
@@ -94,6 +103,9 @@ func main() {
 	flag.StringVar(&certDir, flagCertDir, "./certs", "The directory where the serving certs are kept.")
 	flag.BoolVar(&registerWebhooks, flagRegisterWebhooks, false, "If enabled registers the webhook configurations automatically. The webhook is assumed to be reachable by a service with the name 'gardener-extension-kupid' within the same namespace. If necessary this will also generate TLS certificates for the webhook as well as the webhook configurations. The generated certificates will be published by creating a secret with the name 'gardener-extension-webhook-cert'. If the secret already exists then it is reused and no new certificates are generated.")
 	flag.IntVar(&webhookTimeoutSeconds, flagWebhookTimeoutSeconds, defaultWebhookTimeoutSeconds, "If webhooks are registered automatically then they are configured with this timeout.")
+	flag.DurationVar(&syncPeriod, flagSyncPeriod, defaultSyncPeriod, "SyncPeriod determines the minimum frequency at which watched resources are reconciled. A lower period will correct entropy more quickly, but reduce responsiveness to change if there are many watched resources. Change this value only if you know what you are doing.")
+	flag.Float64Var(&qps, flagQPS, float64(rest.DefaultQPS), "Throttling QPS configuration for the client to host apiserver.")
+	flag.IntVar(&burst, flagBurst, rest.DefaultBurst, "Throttling burst configuration for the client to host apiserver.")
 
 	flag.Parse()
 
@@ -107,13 +119,23 @@ func main() {
 		flagMetricsAddr, metricsAddr,
 		flagCertDir, certDir,
 		flagRegisterWebhooks, registerWebhooks,
+		flagWebhookTimeoutSeconds, webhookTimeoutSeconds,
+		flagSyncPeriod, syncPeriod,
+		flagQPS, qps,
+		flagBurst, burst,
 		envNamespace, namespace)
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	config := ctrl.GetConfigOrDie()
+
+	config.QPS = float32(qps)
+	config.Burst = burst
+
+	mgr, err := ctrl.NewManager(config, ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   webhookPort,
 		HealthProbeBindAddress: healthzAddr,
+		SyncPeriod:             &syncPeriod,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -217,9 +239,9 @@ type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1beta1.Web
 
 func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (runtime.Object, controllerutil.MutateFn) {
 	var (
-		fail  = admissionregistrationv1beta1.Fail
-		exact = admissionregistrationv1beta1.Exact
-		none  = admissionregistrationv1beta1.SideEffectClassNone
+		ignore = admissionregistrationv1beta1.Ignore
+		exact  = admissionregistrationv1beta1.Exact
+		none   = admissionregistrationv1beta1.SideEffectClassNone
 	)
 
 	obj := &admissionregistrationv1beta1.ValidatingWebhookConfiguration{
@@ -239,7 +261,7 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.Webhoo
 						"podschedulingpolicies",
 					}),
 				},
-				FailurePolicy:  &fail,
+				FailurePolicy:  &ignore,
 				MatchPolicy:    &exact,
 				SideEffects:    &none,
 				TimeoutSeconds: &timeoutSeconds,
@@ -251,7 +273,7 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.Webhoo
 
 func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (runtime.Object, controllerutil.MutateFn) {
 	var (
-		fail       = admissionregistrationv1beta1.Fail
+		ignore     = admissionregistrationv1beta1.Ignore
 		equivalent = admissionregistrationv1beta1.Equivalent
 		none       = admissionregistrationv1beta1.SideEffectClassNone
 		ifNeeded   = admissionregistrationv1beta1.IfNeededReinvocationPolicy
@@ -279,6 +301,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 				ClientConfig: clientConfig,
 				Rules: []admissionregistrationv1beta1.RuleWithOperations{
 					buildRuleWithOperations(appsv1.SchemeGroupVersion, []string{
+						"daemonsets",
 						"deployments",
 						"statefulsets",
 					}),
@@ -289,7 +312,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 						"cronjobs",
 					}),
 				},
-				FailurePolicy:      &fail,
+				FailurePolicy:      &ignore,
 				MatchPolicy:        &equivalent,
 				SideEffects:        &none,
 				TimeoutSeconds:     &timeoutSeconds,

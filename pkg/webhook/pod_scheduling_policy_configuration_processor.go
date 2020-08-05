@@ -37,7 +37,7 @@ type podSchedulingPolicyConfigurationValidator interface {
 	validate() field.ErrorList
 }
 
-func (p *podSchedulingPolicyConfigurationProcessor) process(ctx context.Context, reader client.Reader, namespace string) (mutated bool, err error) {
+func (p *podSchedulingPolicyConfigurationProcessor) process(ctx context.Context, cacheReader, directReader client.Reader, namespace string) (mutated bool, err error) {
 	allErrs := p.validate()
 	if len(allErrs) > 0 {
 		return false, allErrs.ToAggregate()
