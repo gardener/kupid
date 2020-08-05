@@ -28,6 +28,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -45,6 +46,7 @@ var log = ctrl.Log.WithName("webhook")
 // Webhook is the implementation for all the webhooks required for kupid.
 type Webhook struct {
 	cache              cache.Cache
+	directReader       client.Reader
 	mu                 sync.Mutex
 	once               sync.Once
 	injector           schedulingPolicyInjector
@@ -115,6 +117,12 @@ func (w *Webhook) InjectCache(c cache.Cache) error {
 	return nil
 }
 
+// InjectAPIReader injects a direct client.Reader into the webhook.
+func (w *Webhook) InjectAPIReader(r client.Reader) error {
+	w.directReader = r
+	return nil
+}
+
 func (w *Webhook) waitForCacheSyncOnce(stop <-chan struct{}) {
 	w.once.Do(func() {
 		log.Info("Waitng for the caches to be synced")
@@ -144,6 +152,11 @@ func (w *Webhook) Start(stop <-chan struct{}) error {
 		// cache should have been injected before Start was called
 		if w.cache == nil {
 			return fmt.Errorf("must call InjectCache on Runnable before calling Start")
+		}
+
+		// directReader should have been injected before Start was called
+		if w.directReader == nil {
+			return fmt.Errorf("must call InjectDirectReader on Runnable before calling Start")
 		}
 
 		for _, obj := range []runtime.Object{
@@ -212,7 +225,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	if err != nil {
 		l.Error(err, "Error getting processor factory")
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
-		return admission.Errored(http.StatusInternalServerError, err)
+		return admission.Allowed(err.Error())
 	}
 
 	p := pf.newProcessor(l)
@@ -227,11 +240,11 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	if err != nil {
 		l.Error(err, "Error decoding admission request object")
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
-		return admission.Errored(http.StatusBadRequest, err)
+		return admission.Allowed(err.Error())
 	}
 
 	if !pf.isMutating() {
-		if _, err := p.process(ctx, w.cache, namespace); err != nil {
+		if _, err := p.process(ctx, w.cache, w.directReader, namespace); err != nil {
 			l.Error(err, "Error processing admission request")
 			kupidRequestsTotal.With(prometheus.Labels{labelType: typeDenied}).Inc()
 			return admission.Denied(err.Error())
@@ -241,10 +254,10 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 		return admission.Allowed("")
 	}
 
-	if mutated, err := p.process(ctx, w.cache, namespace); err != nil {
+	if mutated, err := p.process(ctx, w.cache, w.directReader, namespace); err != nil {
 		l.Error(err, "Error processing admission request")
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
-		return admission.Errored(http.StatusInternalServerError, err)
+		return admission.Allowed(err.Error())
 	} else if !mutated {
 		l.V(1).Info("Nothing mutated", "obj", obj)
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
@@ -256,7 +269,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	if err != nil {
 		l.Error(err, "Error marshalling mutated object for admission response")
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
-		return admission.Errored(http.StatusInternalServerError, err)
+		return admission.Allowed(err.Error())
 	}
 
 	// Create the patch

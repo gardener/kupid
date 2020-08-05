@@ -35,7 +35,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-  #  - daemonsets
+    - daemonsets
     - deployments
   #  - replicasets
     - statefulsets
