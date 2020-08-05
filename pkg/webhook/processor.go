@@ -43,7 +43,7 @@ type objectGetter interface {
 
 type processor interface {
 	objectGetter
-	process(ctx context.Context, reader client.Reader, namespace string) (mutated bool, err error)
+	process(ctx context.Context, cacheReader, directReader client.Reader, namespace string) (mutated bool, err error)
 }
 
 // podSpecCallbacks defines the callback necessary to implement the processor to mutate pod specs embedded in supported objects.
@@ -68,7 +68,7 @@ func (p *podSpecProcessorImpl) injectSchedulingPolicyInjector(injector schedulin
 	p.injector = injector
 }
 
-func (p *podSpecProcessorImpl) process(ctx context.Context, reader client.Reader, namespace string) (bool, error) {
+func (p *podSpecProcessorImpl) process(ctx context.Context, cacheReader, directReader client.Reader, namespace string) (bool, error) {
 	var (
 		obj       = p.getObject()
 		podSpec   = p.getPodSpec()
@@ -78,19 +78,24 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, reader client.Reader
 
 	l.V(1).Info("Beginning of mutate", "obj", obj)
 
-	csps, err := p.getAllClusterSchedulingPolicies(ctx, reader)
+	csps, err := p.getAllClusterSchedulingPolicies(ctx, cacheReader)
 	l.V(1).Info("ClusterSchedulingPolicies", "csps", csps, "Error", err)
 	if err != nil {
 		return false, err
 	}
 
-	ns, err := p.getNamespace(ctx, reader, namespace)
-	l.V(1).Info("Namespace", "ns", ns, "Error", err)
+	ns, err := p.getNamespace(ctx, cacheReader, namespace)
+	l.Info("Error getting namespace from cache", "ns", ns, "Error", err)
+	if err != nil {
+		ns, err = p.getNamespace(ctx, directReader, namespace)
+		l.Info("Error getting namespace from direct reader", "ns", ns, "Error", err)
+	}
+
 	if err != nil {
 		return false, err
 	}
 
-	sps, err := p.getAllSchedulingPoliciesInNamespace(ctx, reader, namespace)
+	sps, err := p.getAllSchedulingPoliciesInNamespace(ctx, cacheReader, namespace)
 	l.V(1).Info("SchedulingPolicies", "sps", sps, "Error", err)
 	if err != nil {
 		return false, err
