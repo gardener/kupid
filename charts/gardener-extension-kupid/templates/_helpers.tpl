@@ -25,3 +25,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "deploymentversion" -}}
 apps/v1
 {{- end -}}
+
+{{- define "policy-name" -}}
+kupid-policy-{{ . }}
+{{- end -}}
+
+{{- define "policy-label-name" -}}
+app.kubernetes.io/name: {{ include "policy-name" . }}
+{{- end -}}
+
+{{- define "policy-label-release" -}}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+

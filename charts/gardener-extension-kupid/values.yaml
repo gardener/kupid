@@ -27,3 +27,28 @@ vpa:
 webhookConfig:
   serverPort: 9443
   timeoutSeconds: 30
+
+# policies:
+#   etcd:
+#     namespaceLabels: {}
+#     podLabels:
+#       app: etcd-statefulset
+#       role: main
+#     nodeLabels:
+#       pool.worker.gardener.cloud/dedicated-for: etcd
+#     tolerations:
+#     - key: pool.worker.gardener.cloud/dedicated-for
+#       operator: Equal
+#       value: etcd
+#       effect: NoExecute
+#   fluent-bit:
+#     namespaceLabels: {}
+#     podLabels:
+#       app: fluent-bit
+#       role: logging
+#       gardener.cloud/role: logging
+#     tolerations:
+#     - key: pool.worker.gardener.cloud/dedicated-for
+#       operator: Equal
+#       value: etcd
+#       effect: NoExecute
