@@ -1,0 +1,43 @@
+{{ $root := . }}
+{{ range $policyName, $policy := .Values.policies }}
+---
+apiVersion: kupid.gardener.cloud/v1alpha1
+kind: ClusterPodSchedulingPolicy
+metadata:
+  name: {{ include "policy-name" $policyName }}
+  labels:
+{{ include "policy-label-name" $policyName | indent 4 }}
+{{ include "policy-label-release" $root | indent 4 }}
+spec:
+  {{- if $policy.namespaceLabels }}
+  namespaceSelector:
+    matchLabels:
+{{ toYaml $policy.namespaceLabels | indent 6 }}
+  {{- else }}
+  namespaceSelector: {}
+  {{- end }}
+  {{- if $policy.podLabels }}
+  podSelector:
+    matchLabels:
+{{ toYaml $policy.podLabels | indent 6 }}
+  {{- else }}
+  podSelector: {}
+  {{- end }}
+  {{- if $policy.nodeLabels }}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+        {{- range $key, $value := $policy.nodeLabels }}
+          - key: {{ $key }}
+            operator: In
+            values: [ {{ $value | quote }} ]
+        {{- end }}
+  {{- end }}
+  {{- if $policy.tolerations }}
+  tolerations:
+{{ toYaml $policy.tolerations | indent 4 }}
+  {{- end }}
+
+{{ end }}
