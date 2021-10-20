@@ -6,6 +6,7 @@ metadata:
   labels:
 {{ include "labels" . | indent 4 }}
 spec:
+  priorityClassName: gardener-extension-kupid
   revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount }}
   selector:
