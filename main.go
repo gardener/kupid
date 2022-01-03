@@ -46,8 +46,15 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme                 = runtime.NewScheme()
+	setupLog               = ctrl.Log.WithName("setup")
+	mutateOnCreateOrUpdate = []admissionregistrationv1beta1.OperationType{
+		admissionregistrationv1beta1.Create,
+		admissionregistrationv1beta1.Update,
+	}
+	mutateOnCreate = []admissionregistrationv1beta1.OperationType{
+		admissionregistrationv1beta1.Create,
+	}
 )
 
 const (
@@ -221,12 +228,9 @@ func buildWebhookClientConfig(namespace string, caBundle []byte) admissionregist
 	}
 }
 
-func buildRuleWithOperations(gv schema.GroupVersion, resources []string) admissionregistrationv1beta1.RuleWithOperations {
+func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operations []admissionregistrationv1beta1.OperationType) admissionregistrationv1beta1.RuleWithOperations {
 	return admissionregistrationv1beta1.RuleWithOperations{
-		Operations: []admissionregistrationv1beta1.OperationType{
-			admissionregistrationv1beta1.Create,
-			admissionregistrationv1beta1.Update,
-		},
+		Operations: operations,
 		Rule: admissionregistrationv1beta1.Rule{
 			APIGroups:   []string{gv.Group},
 			APIVersions: []string{gv.Version},
@@ -259,7 +263,9 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.Webhoo
 					buildRuleWithOperations(kupidv1alpha1.GroupVersion, []string{
 						"clusterpodschedulingpolicies",
 						"podschedulingpolicies",
-					}),
+					},
+						mutateOnCreateOrUpdate,
+					),
 				},
 				FailurePolicy:  &ignore,
 				MatchPolicy:    &exact,
@@ -304,13 +310,13 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 						"daemonsets",
 						"deployments",
 						"statefulsets",
-					}),
+					}, mutateOnCreateOrUpdate),
 					buildRuleWithOperations(batchv1.SchemeGroupVersion, []string{
 						"jobs",
-					}),
+					}, mutateOnCreate),
 					buildRuleWithOperations(batchv1beta1.SchemeGroupVersion, []string{
 						"cronjobs",
-					}),
+					}, mutateOnCreateOrUpdate),
 				},
 				FailurePolicy:      &ignore,
 				MatchPolicy:        &equivalent,
