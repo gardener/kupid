@@ -14,6 +14,13 @@ spec:
 {{ include "labels" . | indent 6 }}
   template:
     metadata:
+      {{- if ne .Values.gardener.version "" }}
+      {{- if semverCompare ">= 1.37-0" .Values.gardener.version }}
+      annotations:
+        # TODO(rfranzke): Remove in a future release.
+        security.gardener.cloud/trigger: rollout
+      {{- end }}
+      {{- end }}
       labels:
 {{ include "labels" . | indent 8 }}
     spec:

@@ -23,7 +23,7 @@ vpa:
     memory: 64M
   updatePolicy:
     updateMode: "Auto"
- 
+
 webhookConfig:
   serverPort: 9443
   timeoutSeconds: 10
@@ -52,3 +52,6 @@ webhookConfig:
 #       operator: Equal
 #       value: etcd
 #       effect: NoExecute
+
+gardener:
+  version: ""
