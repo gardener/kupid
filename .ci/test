@@ -17,6 +17,8 @@
 set -e
 
 export GO111MODULE=on
+# to mute ginkgo deprecation warnings
+export ACK_GINKGO_DEPRECATIONS=2.0.0
 
 # For the test step concourse will set the following environment variables:
 # SOURCE_PATH - path to component repository root directory.

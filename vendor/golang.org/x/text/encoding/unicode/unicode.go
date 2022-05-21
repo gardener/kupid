@@ -6,6 +6,7 @@
 package unicode // import "golang.org/x/text/encoding/unicode"
 
 import (
+	"bytes"
 	"errors"
 	"unicode/utf16"
 	"unicode/utf8"
@@ -25,13 +26,93 @@ import (
 // the introduction of some kind of error type for conveying the erroneous code
 // point.
 
-// UTF8 is the UTF-8 encoding.
+// UTF8 is the UTF-8 encoding. It neither removes nor adds byte order marks.
 var UTF8 encoding.Encoding = utf8enc
+
+// UTF8BOM is an UTF-8 encoding where the decoder strips a leading byte order
+// mark while the encoder adds one.
+//
+// Some editors add a byte order mark as a signature to UTF-8 files. Although
+// the byte order mark is not useful for detecting byte order in UTF-8, it is
+// sometimes used as a convention to mark UTF-8-encoded files. This relies on
+// the observation that the UTF-8 byte order mark is either an illegal or at
+// least very unlikely sequence in any other character encoding.
+var UTF8BOM encoding.Encoding = utf8bomEncoding{}
+
+type utf8bomEncoding struct{}
+
+func (utf8bomEncoding) String() string {
+	return "UTF-8-BOM"
+}
+
+func (utf8bomEncoding) ID() (identifier.MIB, string) {
+	return identifier.Unofficial, "x-utf8bom"
+}
+
+func (utf8bomEncoding) NewEncoder() *encoding.Encoder {
+	return &encoding.Encoder{
+		Transformer: &utf8bomEncoder{t: runes.ReplaceIllFormed()},
+	}
+}
+
+func (utf8bomEncoding) NewDecoder() *encoding.Decoder {
+	return &encoding.Decoder{Transformer: &utf8bomDecoder{}}
+}
 
 var utf8enc = &internal.Encoding{
 	&internal.SimpleEncoding{utf8Decoder{}, runes.ReplaceIllFormed()},
 	"UTF-8",
 	identifier.UTF8,
+}
+
+type utf8bomDecoder struct {
+	checked bool
+}
+
+func (t *utf8bomDecoder) Reset() {
+	t.checked = false
+}
+
+func (t *utf8bomDecoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	if !t.checked {
+		if !atEOF && len(src) < len(utf8BOM) {
+			if len(src) == 0 {
+				return 0, 0, nil
+			}
+			return 0, 0, transform.ErrShortSrc
+		}
+		if bytes.HasPrefix(src, []byte(utf8BOM)) {
+			nSrc += len(utf8BOM)
+			src = src[len(utf8BOM):]
+		}
+		t.checked = true
+	}
+	nDst, n, err := utf8Decoder.Transform(utf8Decoder{}, dst[nDst:], src, atEOF)
+	nSrc += n
+	return nDst, nSrc, err
+}
+
+type utf8bomEncoder struct {
+	written bool
+	t       transform.Transformer
+}
+
+func (t *utf8bomEncoder) Reset() {
+	t.written = false
+	t.t.Reset()
+}
+
+func (t *utf8bomEncoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	if !t.written {
+		if len(dst) < len(utf8BOM) {
+			return nDst, 0, transform.ErrShortDst
+		}
+		nDst = copy(dst, utf8BOM)
+		t.written = true
+	}
+	n, nSrc, err := utf8Decoder.Transform(utf8Decoder{}, dst[nDst:], src, atEOF)
+	nDst += n
+	return nDst, nSrc, err
 }
 
 type utf8Decoder struct{ transform.NopResetter }
@@ -158,12 +239,12 @@ func UTF16(e Endianness, b BOMPolicy) encoding.Encoding {
 // and recommendations. Some of the "configurations" are merely recommendations,
 // so multiple configurations could match.
 var mibValue = map[Endianness][numBOMValues]identifier.MIB{
-	BigEndian: {
+	BigEndian: [numBOMValues]identifier.MIB{
 		IgnoreBOM: identifier.UTF16BE,
 		UseBOM:    identifier.UTF16, // BigEnding default is preferred by RFC 2781.
 		// TODO: acceptBOM | strictBOM would map to UTF16BE as well.
 	},
-	LittleEndian: {
+	LittleEndian: [numBOMValues]identifier.MIB{
 		IgnoreBOM: identifier.UTF16LE,
 		UseBOM:    identifier.UTF16, // LittleEndian default is allowed and preferred on Windows.
 		// TODO: acceptBOM | strictBOM would map to UTF16LE as well.
@@ -287,16 +368,13 @@ func (u *utf16Decoder) Reset() {
 }
 
 func (u *utf16Decoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	if len(src) < 2 && atEOF && u.current.bomPolicy&requireBOM != 0 {
+		return 0, 0, ErrMissingBOM
+	}
 	if len(src) == 0 {
-		if atEOF && u.current.bomPolicy&requireBOM != 0 {
-			return 0, 0, ErrMissingBOM
-		}
 		return 0, 0, nil
 	}
-	if u.current.bomPolicy&acceptBOM != 0 {
-		if len(src) < 2 {
-			return 0, 0, transform.ErrShortSrc
-		}
+	if len(src) >= 2 && u.current.bomPolicy&acceptBOM != 0 {
 		switch {
 		case src[0] == 0xfe && src[1] == 0xff:
 			u.current.endianness = BigEndian
