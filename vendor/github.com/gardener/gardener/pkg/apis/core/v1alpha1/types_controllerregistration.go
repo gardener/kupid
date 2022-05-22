@@ -28,6 +28,7 @@ type ControllerRegistration struct {
 	// Standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	// Spec contains the specification of this registration.
+	// If the object's deletion timestamp is set, this field is immutable.
 	Spec ControllerRegistrationSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 }
 
@@ -51,7 +52,7 @@ type ControllerRegistrationSpec struct {
 	Resources []ControllerResource `json:"resources,omitempty" protobuf:"bytes,1,opt,name=resources"`
 	// Deployment contains information for how this controller is deployed.
 	// +optional
-	Deployment *ControllerDeployment `json:"deployment,omitempty" protobuf:"bytes,2,opt,name=deployment"`
+	Deployment *ControllerRegistrationDeployment `json:"deployment,omitempty" protobuf:"bytes,2,opt,name=deployment"`
 }
 
 // ControllerResource is a combination of a kind (DNSProvider, Infrastructure, Generic, ...) and the actual type for this
@@ -69,18 +70,19 @@ type ControllerResource struct {
 	ReconcileTimeout *metav1.Duration `json:"reconcileTimeout,omitempty" protobuf:"bytes,4,opt,name=reconcileTimeout"`
 	// Primary determines if the controller backed by this ControllerRegistration is responsible for the extension
 	// resource's lifecycle. This field defaults to true. There must be exactly one primary controller for this kind/type
-	// combination.
+	// combination. This field is immutable.
 	// +optional
 	Primary *bool `json:"primary,omitempty" protobuf:"varint,5,opt,name=primary"`
 }
 
-// ControllerDeployment contains information for how this controller is deployed.
-type ControllerDeployment struct {
-	// Type is the deployment type.
-	Type string `json:"type" protobuf:"bytes,1,opt,name=type"`
-	// ProviderConfig contains type-specific configuration.
-	// +optional
-	ProviderConfig *ProviderConfig `json:"providerConfig,omitempty" protobuf:"bytes,2,opt,name=providerConfig"`
+// DeploymentRef contains information about `ControllerDeployment` references.
+type DeploymentRef struct {
+	// Name is the name of the `ControllerDeployment` that is being referred to.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+}
+
+// ControllerRegistrationDeployment contains information for how this controller is deployed.
+type ControllerRegistrationDeployment struct {
 	// Policy controls how the controller is deployed. It defaults to 'OnDemand'.
 	// +optional
 	Policy *ControllerDeploymentPolicy `json:"policy,omitempty" protobuf:"bytes,3,opt,name=policy"`
@@ -89,6 +91,9 @@ type ControllerDeployment struct {
 	// An empty list means that all seeds are selected.
 	// +optional
 	SeedSelector *metav1.LabelSelector `json:"seedSelector,omitempty" protobuf:"bytes,4,opt,name=seedSelector"`
+	// DeploymentRefs holds references to `ControllerDeployments`. Only one element is support now.
+	// +optional
+	DeploymentRefs []DeploymentRef `json:"deploymentRefs,omitempty" protobuf:"bytes,5,opt,name=deploymentRefs"`
 }
 
 // ControllerDeploymentPolicy is a string alias.
@@ -99,6 +104,9 @@ const (
 	// resource. If nothing requires it then the controller shall not be deployed.
 	ControllerDeploymentPolicyOnDemand ControllerDeploymentPolicy = "OnDemand"
 	// ControllerDeploymentPolicyAlways specifies that the controller shall be deployed always, independent of whether
-	// another resource requires it.
+	// another resource requires it or the respective seed has shoots.
 	ControllerDeploymentPolicyAlways ControllerDeploymentPolicy = "Always"
+	// ControllerDeploymentPolicyAlwaysExceptNoShoots specifies that the controller shall be deployed always, independent of
+	// whether another resource requires it, but only when the respective seed has at least one shoot.
+	ControllerDeploymentPolicyAlwaysExceptNoShoots ControllerDeploymentPolicy = "AlwaysExceptNoShoots"
 )

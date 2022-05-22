@@ -28,6 +28,7 @@ type ControllerRegistration struct {
 	// Standard object metadata.
 	metav1.ObjectMeta
 	// Spec contains the specification of this registration.
+	// If the object's deletion timestamp is set, this field is immutable.
 	Spec ControllerRegistrationSpec
 }
 
@@ -48,7 +49,7 @@ type ControllerRegistrationSpec struct {
 	// (aws-route53, gcp, auditlog, ...).
 	Resources []ControllerResource
 	// Deployment contains information for how this controller is deployed.
-	Deployment *ControllerDeployment
+	Deployment *ControllerRegistrationDeployment
 }
 
 // ControllerResource is a combination of a kind (DNSProvider, Infrastructure, Generic, ...) and the actual type for this
@@ -64,22 +65,26 @@ type ControllerResource struct {
 	ReconcileTimeout *metav1.Duration
 	// Primary determines if the controller backed by this ControllerRegistration is responsible for the extension
 	// resource's lifecycle. This field defaults to true. There must be exactly one primary controller for this kind/type
-	// combination.
+	// combination. This field is immutable.
 	Primary *bool
 }
 
-// ControllerDeployment contains information for how this controller is deployed.
-type ControllerDeployment struct {
-	// Type is the deployment type.
-	Type string
-	// ProviderConfig contains type-specific configuration.
-	ProviderConfig *ProviderConfig
+// DeploymentRef contains information about `ControllerDeployment` references.
+type DeploymentRef struct {
+	// Name is the name of the `ControllerDeployment` that is being referred to.
+	Name string
+}
+
+// ControllerRegistrationDeployment contains information for how this controller is deployed.
+type ControllerRegistrationDeployment struct {
 	// Policy controls how the controller is deployed. It defaults to 'OnDemand'.
 	Policy *ControllerDeploymentPolicy
 	// SeedSelector contains an optional label selector for seeds. Only if the labels match then this controller will be
 	// considered for a deployment.
 	// An empty list means that all seeds are selected.
 	SeedSelector *metav1.LabelSelector
+	// DeploymentRefs holds references to `ControllerDeployments`. Only one element is support now.
+	DeploymentRefs []DeploymentRef
 }
 
 // ControllerDeploymentPolicy is a string alias.
@@ -90,6 +95,9 @@ const (
 	// resource. If nothing requires it then the controller shall not be deployed.
 	ControllerDeploymentPolicyOnDemand ControllerDeploymentPolicy = "OnDemand"
 	// ControllerDeploymentPolicyAlways specifies that the controller shall be deployed always, independent of whether
-	// another resource requires it.
+	// another resource requires it or the respective seed has shoots.
 	ControllerDeploymentPolicyAlways ControllerDeploymentPolicy = "Always"
+	// ControllerDeploymentPolicyAlwaysExceptNoShoots specifies that the controller shall be deployed always, independent of
+	// whether another resource requires it, but only when the respective seed has at least one shoot.
+	ControllerDeploymentPolicyAlwaysExceptNoShoots ControllerDeploymentPolicy = "AlwaysExceptNoShoots"
 )

@@ -29,11 +29,7 @@ import (
 
 // EncodeBase64 takes a byte slice and returns the Base64-encoded string.
 func EncodeBase64(in []byte) string {
-	encodedLength := base64.StdEncoding.EncodedLen(len(in))
-	buffer := make([]byte, encodedLength)
-	out := buffer[0:encodedLength]
-	base64.StdEncoding.Encode(out, in)
-	return string(out)
+	return base64.StdEncoding.EncodeToString(in)
 }
 
 // DecodeBase64 takes a Base64-encoded string and returns the decoded byte slice.
@@ -63,6 +59,24 @@ func EncodePrivateKeyInPKCS8(key *rsa.PrivateKey) ([]byte, error) {
 	}), nil
 }
 
+// DecodeRSAPrivateKeyFromPKCS8 takes a byte slice, decodes it from the PKCS8 format, tries to convert it
+// to an rsa.PrivateKey object, and returns it. In case an error occurs, it returns the error.
+func DecodeRSAPrivateKeyFromPKCS8(bytes []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(bytes)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return nil, errors.New("could not decode the PEM-encoded RSA private key")
+	}
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	rsaKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("the decoded key is not an RSA private key")
+	}
+	return rsaKey, nil
+}
+
 // DecodePrivateKey takes a byte slice, decodes it from the PEM format, converts it to an rsa.PrivateKey
 // object, and returns it. In case an error occurs, it returns the error.
 func DecodePrivateKey(bytes []byte) (*rsa.PrivateKey, error) {
@@ -87,9 +101,18 @@ func EncodeCertificate(certificate []byte) []byte {
 func DecodeCertificate(bytes []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(bytes)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, errors.New("could not decode the PEM-encoded certificate")
+		return nil, errors.New("PEM block type must be CERTIFICATE")
 	}
 	return x509.ParseCertificate(block.Bytes)
+}
+
+// DecodeCertificateRequest parses the given PEM-encoded CSR.
+func DecodeCertificateRequest(data []byte) (*x509.CertificateRequest, error) {
+	block, _ := pem.Decode(data)
+	if block == nil || block.Type != "CERTIFICATE REQUEST" {
+		return nil, errors.New("PEM block type must be CERTIFICATE REQUEST")
+	}
+	return x509.ParseCertificateRequest(block.Bytes)
 }
 
 // SHA1 takes a byte slice and returns the sha1-hashed byte slice.

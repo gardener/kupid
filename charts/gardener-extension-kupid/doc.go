@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../vendor/github.com/gardener/gardener/extensions/hack/generate-controller-registration.sh kupid . ../../VERSION ../../example/controller-registration.yaml ClusterPorSchedulingPolicy:
+//go:generate sh -c "../../vendor/github.com/gardener/gardener/hack/generate-controller-registration.sh kupid . $(cat ../../VERSION) ../../example/controller-registration.yaml Extension:ClusterPodSchdulingPolicy Extension:PodSchedulingPolicy"
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart

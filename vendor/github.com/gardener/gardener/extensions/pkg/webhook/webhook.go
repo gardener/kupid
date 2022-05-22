@@ -17,8 +17,9 @@ package webhook
 import (
 	"net/http"
 
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -39,24 +40,34 @@ const (
 
 // Webhook is the specification of a webhook.
 type Webhook struct {
-	Name     string
-	Kind     string
-	Provider string
-	Path     string
-	Target   string
-	Types    []runtime.Object
-	Webhook  *admission.Webhook
-	Handler  http.Handler
-	Selector *metav1.LabelSelector
+	Name           string
+	Kind           string
+	Provider       string
+	Path           string
+	Target         string
+	Types          []Type
+	Webhook        *admission.Webhook
+	Handler        http.Handler
+	Selector       *metav1.LabelSelector
+	ObjectSelector *metav1.LabelSelector
+	FailurePolicy  *admissionregistrationv1.FailurePolicyType
+	TimeoutSeconds *int32
 }
 
+// Type contains information about the Kubernetes object types and subresources the webhook acts upon.
+type Type struct {
+	Obj         client.Object
+	Subresource *string
+}
+
+// Args contains Webhook creation arguments.
 type Args struct {
 	Provider   string
 	Name       string
 	Path       string
 	Predicates []predicate.Predicate
-	Validators map[Validator][]runtime.Object
-	Mutators   map[Mutator][]runtime.Object
+	Validators map[Validator][]Type
+	Mutators   map[Mutator][]Type
 }
 
 // New creates a new Webhook with the given args.

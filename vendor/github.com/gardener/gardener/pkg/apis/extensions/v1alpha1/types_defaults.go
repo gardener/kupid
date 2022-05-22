@@ -24,8 +24,9 @@ type DefaultSpec struct {
 	// Type contains the instance of the resource's kind.
 	Type string `json:"type"`
 	// ProviderConfig is the provider specific configuration.
+	// +kubebuilder:validation:XPreserveUnknownFields
+	// +kubebuilder:pruning:PreserveUnknownFields
 	// +optional
-
 	ProviderConfig *runtime.RawExtension `json:"providerConfig,omitempty"`
 }
 
@@ -47,6 +48,8 @@ func (d *DefaultSpec) GetProviderConfig() *runtime.RawExtension {
 // DefaultStatus contains common status fields for every extension resource.
 type DefaultStatus struct {
 	// ProviderStatus contains provider-specific status.
+	// +kubebuilder:validation:XPreserveUnknownFields
+	// +kubebuilder:pruning:PreserveUnknownFields
 	// +optional
 	ProviderStatus *runtime.RawExtension `json:"providerStatus,omitempty"`
 	// Conditions represents the latest available observations of a Seed's current state.
@@ -61,6 +64,8 @@ type DefaultStatus struct {
 	// ObservedGeneration is the most recent generation observed for this resource.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 	// State can be filled by the operating controller with what ever data it needs.
+	// +kubebuilder:validation:XPreserveUnknownFields
+	// +kubebuilder:pruning:PreserveUnknownFields
 	// +optional
 	State *runtime.RawExtension `json:"state,omitempty"`
 	// Resources holds a list of named resource references that can be referred to in the state by their names.
@@ -88,9 +93,19 @@ func (d *DefaultStatus) GetLastOperation() *gardencorev1beta1.LastOperation {
 	return d.LastOperation
 }
 
+// SetLastOperation implements Status.
+func (d *DefaultStatus) SetLastOperation(lastOp *gardencorev1beta1.LastOperation) {
+	d.LastOperation = lastOp
+}
+
 // GetLastError implements Status.
 func (d *DefaultStatus) GetLastError() *gardencorev1beta1.LastError {
 	return d.LastError
+}
+
+// SetLastError implements Status.
+func (d *DefaultStatus) SetLastError(lastErr *gardencorev1beta1.LastError) {
+	d.LastError = lastErr
 }
 
 // GetObservedGeneration implements Status.
@@ -98,12 +113,27 @@ func (d *DefaultStatus) GetObservedGeneration() int64 {
 	return d.ObservedGeneration
 }
 
+// SetObservedGeneration implements Status.
+func (d *DefaultStatus) SetObservedGeneration(generation int64) {
+	d.ObservedGeneration = generation
+}
+
 // GetState implements Status.
 func (d *DefaultStatus) GetState() *runtime.RawExtension {
 	return d.State
 }
 
+// SetState implements Status.
+func (d *DefaultStatus) SetState(state *runtime.RawExtension) {
+	d.State = state
+}
+
 // GetResources implements Status.
 func (d *DefaultStatus) GetResources() []gardencorev1beta1.NamedResourceReference {
 	return d.Resources
+}
+
+// SetResources implements Status.
+func (d *DefaultStatus) SetResources(namedResourceReference []gardencorev1beta1.NamedResourceReference) {
+	d.Resources = namedResourceReference
 }

@@ -17,14 +17,13 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,7 +60,7 @@ func GenerateCertificates(ctx context.Context, mgr manager.Manager, certDir, nam
 	if len(namespace) == 0 {
 		caCert, serverCert, err = generateNewCAAndServerCert(mode, namespace, name, url)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error generating new certificates for webhook server")
+			return nil, fmt.Errorf("error generating new certificates for webhook server: %w", err)
 		}
 		return writeCertificates(certDir, caCert, serverCert)
 	}
@@ -76,13 +75,13 @@ func GenerateCertificates(ctx context.Context, mgr manager.Manager, certDir, nam
 	secret := &corev1.Secret{}
 	if err := c.Get(ctx, kutil.Key(namespace, certSecretName), secret); err != nil {
 		if !apierrors.IsNotFound(err) {
-			return nil, errors.Wrapf(err, "error getting cert secret")
+			return nil, fmt.Errorf("error getting cert secret: %w", err)
 		}
 
 		// The secret was not found, let's generate new certificates and store them in the secret afterwards.
 		caCert, serverCert, err = generateNewCAAndServerCert(mode, namespace, name, url)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error generating new certificates for webhook server")
+			return nil, fmt.Errorf("error generating new certificates for webhook server: %w", err)
 		}
 
 		secret.ObjectMeta = metav1.ObjectMeta{Namespace: namespace, Name: certSecretName}
@@ -103,7 +102,7 @@ func GenerateCertificates(ctx context.Context, mgr manager.Manager, certDir, nam
 	// The secret has been found and we are now trying to read the stored certificate inside it.
 	caCert, serverCert, err = loadExistingCAAndServerCert(secret.Data)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading data of secret %s/%s", namespace, certSecretName)
+		return nil, fmt.Errorf("error reading data of secret %s/%s: %w", namespace, certSecretName, err)
 	}
 	return writeCertificates(certDir, caCert, serverCert)
 }
@@ -124,6 +123,13 @@ func generateNewCAAndServerCert(mode, namespace, name, url string) (*secrets.Cer
 		ipAddresses []net.IP
 	)
 
+	serverName := url
+	serverNameData := strings.SplitN(url, ":", 3)
+
+	if len(serverNameData) == 2 {
+		serverName = serverNameData[0]
+	}
+
 	switch mode {
 	case ModeURL:
 		if addr := net.ParseIP(url); addr != nil {
@@ -132,7 +138,7 @@ func generateNewCAAndServerCert(mode, namespace, name, url string) (*secrets.Cer
 			}
 		} else {
 			dnsNames = []string{
-				url,
+				serverName,
 			}
 		}
 
@@ -199,10 +205,10 @@ func writeCertificates(certDir string, caCert, serverCert *secrets.Certificate) 
 	if err := os.MkdirAll(certDir, 0755); err != nil {
 		return nil, err
 	}
-	if err := ioutil.WriteFile(serverKeyPath, serverCert.PrivateKeyPEM, 0666); err != nil {
+	if err := os.WriteFile(serverKeyPath, serverCert.PrivateKeyPEM, 0666); err != nil {
 		return nil, err
 	}
-	if err := ioutil.WriteFile(serverCertPath, serverCert.CertificatePEM, 0666); err != nil {
+	if err := os.WriteFile(serverCertPath, serverCert.CertificatePEM, 0666); err != nil {
 		return nil, err
 	}
 

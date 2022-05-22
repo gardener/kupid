@@ -79,26 +79,36 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, cacheReader, directR
 	l.V(1).Info("Beginning of mutate", "obj", obj)
 
 	csps, err := p.getAllClusterSchedulingPolicies(ctx, cacheReader)
-	l.V(1).Info("ClusterSchedulingPolicies", "csps", csps, "Error", err)
+	l.V(1).Info("Getting ClusterSchedulingPolicies", "csps", csps, "Error", err)
 	if err != nil {
-		return false, err
+		l.V(1).Info("Error getting ClusterSchedulingPolicies from cache", "csps", csps, "Error:", err)
+		csps, err = p.getAllClusterSchedulingPolicies(ctx, directReader)
+		if err != nil {
+			l.V(1).Info("Error getting ClusterSchedulingPolicies with direct reader", "csps", csps, "Error:", err)
+			return false, err
+		}
 	}
 
 	ns, err := p.getNamespace(ctx, cacheReader, namespace)
-	l.Info("Error getting namespace from cache", "ns", ns, "Error", err)
+	l.V(1).Info("Getting namespace from cache", "ns", ns, "Error", err)
 	if err != nil {
+		l.V(1).Info("Error getting namespace from cache", "ns", ns, "Error", err)
 		ns, err = p.getNamespace(ctx, directReader, namespace)
-		l.Info("Error getting namespace from direct reader", "ns", ns, "Error", err)
-	}
-
-	if err != nil {
-		return false, err
+		if err != nil {
+			l.V(1).Info("Error getting namespace from direct reader", "ns", ns, "Error", err)
+			return false, err
+		}
 	}
 
 	sps, err := p.getAllSchedulingPoliciesInNamespace(ctx, cacheReader, namespace)
-	l.V(1).Info("SchedulingPolicies", "sps", sps, "Error", err)
+	l.V(1).Info("Getting SchedulingPolicies from Cache", "sps", sps, "Error", err)
 	if err != nil {
-		return false, err
+		l.V(1).Info("Error getting SchedulingPolicies from cache", "sps", sps, "Error", err)
+		sps, err = p.getAllSchedulingPoliciesInNamespace(ctx, directReader, namespace)
+		if err != nil {
+			l.V(1).Info("Error getting SchedulingPolicies with direct reader", "sps", sps, "Error", err)
+			return false, err
+		}
 	}
 
 	var spcs []common.PodSchedulingPolicyConfiguration

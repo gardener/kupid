@@ -20,15 +20,14 @@ import (
 	"fmt"
 	"net/http"
 
-	extensionspredicate "github.com/gardener/gardener/extensions/pkg/predicate"
+	predicateutils "github.com/gardener/gardener/pkg/controllerutils/predicate"
 
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -38,7 +37,7 @@ import (
 
 // HandlerBuilder contains information which are required to create an admission handler.
 type HandlerBuilder struct {
-	mutatorMap map[Mutator][]runtime.Object
+	mutatorMap map[Mutator][]Type
 	predicates []predicate.Predicate
 	scheme     *runtime.Scheme
 	logger     logr.Logger
@@ -47,21 +46,22 @@ type HandlerBuilder struct {
 // NewBuilder creates a new HandlerBuilder.
 func NewBuilder(mgr manager.Manager, logger logr.Logger) *HandlerBuilder {
 	return &HandlerBuilder{
-		mutatorMap: make(map[Mutator][]runtime.Object),
+		mutatorMap: make(map[Mutator][]Type),
 		scheme:     mgr.GetScheme(),
 		logger:     logger.WithName("handler"),
 	}
 }
 
 // WithMutator adds the given mutator for the given types to the HandlerBuilder.
-func (b *HandlerBuilder) WithMutator(mutator Mutator, types ...runtime.Object) *HandlerBuilder {
+func (b *HandlerBuilder) WithMutator(mutator Mutator, types ...Type) *HandlerBuilder {
+	mutator = hybridMutator(mutator)
 	b.mutatorMap[mutator] = append(b.mutatorMap[mutator], types...)
 
 	return b
 }
 
 // WithValidator adds the given validator for the given types to the HandlerBuilder.
-func (b *HandlerBuilder) WithValidator(validator Validator, types ...runtime.Object) *HandlerBuilder {
+func (b *HandlerBuilder) WithValidator(validator Validator, types ...Type) *HandlerBuilder {
 	mutator := hybridValidator(validator)
 	b.mutatorMap[mutator] = append(b.mutatorMap[mutator], types...)
 	return b
@@ -76,7 +76,7 @@ func (b *HandlerBuilder) WithPredicates(predicates ...predicate.Predicate) *Hand
 // Build creates a new admission.Handler with the settings previously specified with the HandlerBuilder's functions.
 func (b *HandlerBuilder) Build() (admission.Handler, error) {
 	h := &handler{
-		typesMap:   make(map[metav1.GroupVersionKind]runtime.Object),
+		typesMap:   make(map[metav1.GroupVersionKind]client.Object),
 		mutatorMap: make(map[metav1.GroupVersionKind]Mutator),
 		predicates: b.predicates,
 		scheme:     b.scheme,
@@ -84,7 +84,7 @@ func (b *HandlerBuilder) Build() (admission.Handler, error) {
 	}
 
 	for m, t := range b.mutatorMap {
-		typesMap, err := buildTypesMap(b.scheme, t)
+		typesMap, err := buildTypesMap(b.scheme, objectsFromTypes(t))
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (b *HandlerBuilder) Build() (admission.Handler, error) {
 }
 
 type handler struct {
-	typesMap   map[metav1.GroupVersionKind]runtime.Object
+	typesMap   map[metav1.GroupVersionKind]client.Object
 	mutatorMap map[metav1.GroupVersionKind]Mutator
 	predicates []predicate.Predicate
 	decoder    runtime.Decoder
@@ -112,7 +112,7 @@ type handler struct {
 func (h *handler) InjectFunc(f inject.Func) error {
 	for _, mutator := range h.mutatorMap {
 		if err := f(mutator); err != nil {
-			return errors.Wrap(err, "could not inject into the mutator")
+			return fmt.Errorf("could not inject into the mutator: %w", err)
 		}
 	}
 	return nil
@@ -133,7 +133,7 @@ func (h *handler) Handle(ctx context.Context, req admission.Request) admission.R
 			}
 		}
 		if t == nil {
-			return admission.Errored(http.StatusBadRequest, errors.Errorf("unexpected request kind %s", ar.Kind.String()))
+			return admission.Errored(http.StatusBadRequest, fmt.Errorf("unexpected request kind %s", ar.Kind.String()))
 		}
 	}
 
@@ -147,51 +147,44 @@ func (h *handler) Handle(ctx context.Context, req admission.Request) admission.R
 			}
 		}
 		if mutator == nil {
-			return admission.Errored(http.StatusBadRequest, errors.Errorf("unexpected request kind %s", ar.Kind.String()))
+			return admission.Errored(http.StatusBadRequest, fmt.Errorf("unexpected request kind %s", ar.Kind.String()))
 		}
 	}
 
 	return handle(ctx, req, mutator, t, h.decoder, h.logger, h.predicates...)
 }
 
-func handle(ctx context.Context, req admission.Request, m Mutator, t runtime.Object, decoder runtime.Decoder, logger logr.Logger, predicates ...predicate.Predicate) admission.Response {
+func handle(ctx context.Context, req admission.Request, m Mutator, t client.Object, decoder runtime.Decoder, logger logr.Logger, predicates ...predicate.Predicate) admission.Response {
 	ar := req.AdmissionRequest
 
 	// Decode object
-	obj := t.DeepCopyObject()
+	obj := t.DeepCopyObject().(client.Object)
 	_, _, err := decoder.Decode(req.Object.Raw, nil, obj)
 	if err != nil {
-		logger.Error(errors.WithStack(err), "could not decode request", "request", ar)
-		return admission.Errored(http.StatusBadRequest, fmt.Errorf("could not decode request %v: %v", ar, err))
+		logger.Error(err, "Could not decode request", "request", ar)
+		return admission.Errored(http.StatusBadRequest, fmt.Errorf("could not decode request %v: %w", ar, err))
 	}
 
-	// Get object accessor
-	accessor, err := meta.Accessor(obj)
-	if err != nil {
-		logger.Error(errors.WithStack(err), "could not get accessor", "object", obj)
-		return admission.Errored(http.StatusBadRequest, fmt.Errorf("could not get accessor for %v: %v", obj, err))
-	}
-
-	var oldObj runtime.Object
+	var oldObj client.Object
 
 	// Only UPDATE and DELETE operations have oldObjects.
 	if len(req.OldObject.Raw) != 0 {
-		oldObj = t.DeepCopyObject()
+		oldObj = t.DeepCopyObject().(client.Object)
 		if _, _, err := decoder.Decode(ar.OldObject.Raw, nil, oldObj); err != nil {
-			logger.Error(errors.WithStack(err), "could not decode old object", "object", oldObj)
+			logger.Error(err, "Could not decode old object", "object", oldObj)
 			return admission.Errored(http.StatusBadRequest, fmt.Errorf("could not decode old object %v: %v", oldObj, err))
 		}
 	}
 
 	// Run object through predicates
-	if !extensionspredicate.EvalGeneric(obj, predicates...) {
+	if !predicateutils.EvalGeneric(obj, predicates...) {
 		return admission.ValidationResponse(true, "")
 	}
 
 	// Process the resource
-	newObj := obj.DeepCopyObject()
+	newObj := obj.DeepCopyObject().(client.Object)
 	if err = m.Mutate(ctx, newObj, oldObj); err != nil {
-		logger.Error(errors.Wrap(err, "could not process"), "admission denied", "kind", ar.Kind.Kind, "namespace", accessor.GetNamespace(), "name", accessor.GetName())
+		logger.Error(fmt.Errorf("could not process: %w", err), "Admission denied", "kind", ar.Kind.Kind, "namespace", obj.GetNamespace(), "name", obj.GetName())
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
@@ -214,14 +207,22 @@ func handle(ctx context.Context, req admission.Request, m Mutator, t runtime.Obj
 	return admission.ValidationResponse(true, "")
 }
 
+func objectsFromTypes(in []Type) []client.Object {
+	out := make([]client.Object, 0, len(in))
+	for _, t := range in {
+		out = append(out, t.Obj)
+	}
+	return out
+}
+
 // buildTypesMap builds a map of the given types keyed by their GroupVersionKind, using the scheme from the given Manager.
-func buildTypesMap(scheme *runtime.Scheme, types []runtime.Object) (map[metav1.GroupVersionKind]runtime.Object, error) {
-	typesMap := make(map[metav1.GroupVersionKind]runtime.Object)
+func buildTypesMap(scheme *runtime.Scheme, types []client.Object) (map[metav1.GroupVersionKind]client.Object, error) {
+	typesMap := make(map[metav1.GroupVersionKind]client.Object)
 	for _, t := range types {
 		// Get GVK from the type
 		gvk, err := apiutil.GVKForObject(t, scheme)
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not get GroupVersionKind from object %v", t)
+			return nil, fmt.Errorf("could not get GroupVersionKind from object %v: %w", t, err)
 		}
 
 		// Add the type to the types map

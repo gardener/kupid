@@ -18,8 +18,15 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# We need to explicitly pass GO111MODULE=off to k8s.io/code-generator as it is significantly slower otherwise,
+# see https://github.com/kubernetes/code-generator/issues/100.
+export GO111MODULE=off
+
 CURRENT_DIR="$(dirname $0)"
 PROJECT_ROOT="${CURRENT_DIR}"/..
+if [ "${PROJECT_ROOT#/}" == "${PROJECT_ROOT}" ]; then
+  PROJECT_ROOT="./$PROJECT_ROOT"
+fi
 
 pushd "$PROJECT_ROOT" > /dev/null
 APIROOTS=${APIROOTS:-$(git grep --files-with-matches -e '// +k8s:protobuf-gen=package' cmd pkg | \
@@ -29,13 +36,8 @@ APIROOTS=${APIROOTS:-$(git grep --files-with-matches -e '// +k8s:protobuf-gen=pa
 )}
 popd > /dev/null
 
-rm -f ${GOPATH}/bin/go-to-protobuf
-rm -f ${GOPATH}/bin/protoc-gen-gogo
-
-GOFLAGS="" go build -o ${GOPATH}/bin "$PROJECT_ROOT/vendor/k8s.io/code-generator/cmd/go-to-protobuf"
-GOFLAGS="" go build -o ${GOPATH}/bin "$PROJECT_ROOT/vendor/k8s.io/code-generator/cmd/go-to-protobuf/protoc-gen-gogo"
-
 if [[ -z "$(which protoc)" || "$(protoc --version)" != "libprotoc 3."* ]]; then
+  # TODO: install to local hack/tools/bin dir
   if [[ "$(uname -s)" == *"Darwin"* ]]; then
     brew install protobuf
   else
@@ -57,6 +59,6 @@ read -ra PACKAGES <<< $(echo ${APIROOTS})
 # core Google protobuf types
 go-to-protobuf \
   --packages="$(IFS=, ; echo "${PACKAGES[*]}")" \
-  --apimachinery-packages='-k8s.io/apimachinery/pkg/util/intstr,-k8s.io/apimachinery/pkg/api/resource,-k8s.io/apimachinery/pkg/runtime/schema,-k8s.io/apimachinery/pkg/runtime,-k8s.io/apimachinery/pkg/apis/meta/v1,-k8s.io/apimachinery/pkg/apis/meta/v1beta1,-k8s.io/api/core/v1,-k8s.io/api/rbac/v1,-k8s.io/api/autoscaling/v1' \
+  --apimachinery-packages='-k8s.io/apimachinery/pkg/util/intstr,-k8s.io/apimachinery/pkg/api/resource,-k8s.io/apimachinery/pkg/runtime/schema,-k8s.io/apimachinery/pkg/runtime,-k8s.io/apimachinery/pkg/apis/meta/v1,-k8s.io/apimachinery/pkg/apis/meta/v1beta1,-k8s.io/api/core/v1,-k8s.io/api/rbac/v1,-k8s.io/api/autoscaling/v1,-k8s.io/api/networking/v1' \
   --go-header-file=${PROJECT_ROOT}/hack/LICENSE_BOILERPLATE.txt \
   --proto-import=${PROJECT_ROOT}/vendor

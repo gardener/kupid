@@ -239,9 +239,9 @@ func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operati
 	}
 }
 
-type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (runtime.Object, controllerutil.MutateFn)
+type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn)
 
-func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (runtime.Object, controllerutil.MutateFn) {
+func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
 	var (
 		ignore = admissionregistrationv1beta1.Ignore
 		exact  = admissionregistrationv1beta1.Exact
@@ -279,7 +279,7 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.Webhoo
 	}
 }
 
-func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (runtime.Object, controllerutil.MutateFn) {
+func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
 	var (
 		ignore     = admissionregistrationv1beta1.Ignore
 		equivalent = admissionregistrationv1beta1.Equivalent

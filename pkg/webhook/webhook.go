@@ -24,7 +24,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -123,10 +122,10 @@ func (w *Webhook) InjectAPIReader(r client.Reader) error {
 	return nil
 }
 
-func (w *Webhook) waitForCacheSyncOnce(stop <-chan struct{}) {
+func (w *Webhook) waitForCacheSyncOnce(ctx context.Context) {
 	w.once.Do(func() {
 		log.Info("Waitng for the caches to be synced")
-		if ok := w.cache.WaitForCacheSync(stop); !ok {
+		if ok := w.cache.WaitForCacheSync(ctx); !ok {
 			err := fmt.Errorf("failed to wait for caches to sync")
 			log.Error(err, "Could not wait for Cache to sync")
 		}
@@ -138,7 +137,7 @@ func (w *Webhook) waitForCacheSyncOnce(stop <-chan struct{}) {
 // Start initializes the cache.  The component will stop running
 // when the channel is closed.  Start blocks until the channel is closed or
 // an error occurs.
-func (w *Webhook) Start(stop <-chan struct{}) error {
+func (w *Webhook) Start(ctx context.Context) error {
 	// use an IIFE to get proper lock handling
 	// but lock outside to get proper handling of the queue shutdown
 	w.mu.Lock()
@@ -159,13 +158,13 @@ func (w *Webhook) Start(stop <-chan struct{}) error {
 			return fmt.Errorf("must call InjectDirectReader on Runnable before calling Start")
 		}
 
-		for _, obj := range []runtime.Object{
+		for _, obj := range []client.Object{
 			&corev1.Namespace{},
 			&kupidv1alpha1.ClusterPodSchedulingPolicy{},
 			&kupidv1alpha1.PodSchedulingPolicy{},
 		} {
 			log.Info("Registering informer", "obj", obj)
-			if _, err := w.cache.GetInformer(obj); err != nil {
+			if _, err := w.cache.GetInformer(ctx, obj); err != nil {
 				if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
 					log.Error(err, "if kind is a CRD, it should be installed before calling Start",
 						"kind", kindMatchErr.GroupKind)
@@ -174,7 +173,7 @@ func (w *Webhook) Start(stop <-chan struct{}) error {
 			}
 		}
 
-		w.waitForCacheSyncOnce(stop)
+		w.waitForCacheSyncOnce(ctx)
 
 		w.started = true
 		return nil
@@ -183,7 +182,6 @@ func (w *Webhook) Start(stop <-chan struct{}) error {
 		return err
 	}
 
-	<-stop
 	log.Info("Stopping webhook")
 	return nil
 }
@@ -214,7 +212,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 
 	l.V(1).Info("Handling", "req", req)
 
-	w.waitForCacheSyncOnce(ctx.Done())
+	w.waitForCacheSyncOnce(ctx)
 
 	kupidRequestsTotal.With(prometheus.Labels{labelType: typeProcessed}).Inc()
 

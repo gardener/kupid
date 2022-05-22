@@ -17,6 +17,7 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
@@ -29,6 +30,7 @@ type ControllerInstallation struct {
 	// Standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	// Spec contains the specification of this installation.
+	// If the object's deletion timestamp is set, this field is immutable.
 	Spec ControllerInstallationSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 	// Status contains the status of this installation.
 	Status ControllerInstallationStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
@@ -48,10 +50,14 @@ type ControllerInstallationList struct {
 
 // ControllerInstallationSpec is the specification of a ControllerInstallation.
 type ControllerInstallationSpec struct {
-	// RegistrationRef is used to reference a ControllerRegistration resources.
+	// RegistrationRef is used to reference a ControllerRegistration resource.
+	// The name field of the RegistrationRef is immutable.
 	RegistrationRef corev1.ObjectReference `json:"registrationRef" protobuf:"bytes,1,opt,name=registrationRef"`
-	// SeedRef is used to reference a Seed resources.
+	// SeedRef is used to reference a Seed resource. The name field of the SeedRef is immutable.
 	SeedRef corev1.ObjectReference `json:"seedRef" protobuf:"bytes,2,opt,name=seedRef"`
+	// DeploymentRef is used to reference a ControllerDeployment resource.
+	// +optional
+	DeploymentRef *corev1.ObjectReference `json:"deploymentRef,omitempty" protobuf:"bytes,3,opt,name=deploymentRef"`
 }
 
 // ControllerInstallationStatus is the status of a ControllerInstallation.
@@ -63,7 +69,7 @@ type ControllerInstallationStatus struct {
 	Conditions []Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 	// ProviderStatus contains type-specific status.
 	// +optional
-	ProviderStatus *ProviderConfig `json:"providerStatus,omitempty" protobuf:"bytes,2,opt,name=providerStatus"`
+	ProviderStatus *runtime.RawExtension `json:"providerStatus,omitempty" protobuf:"bytes,2,opt,name=providerStatus"`
 }
 
 const (
