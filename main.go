@@ -299,7 +299,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 				Name: "mutate." + kupidv1alpha1.GroupVersion.Group,
 				NamespaceSelector: &metav1.LabelSelector{
 					MatchExpressions: []metav1.LabelSelectorRequirement{
-						metav1.LabelSelectorRequirement{
+						{
 							Key:      "role",
 							Operator: metav1.LabelSelectorOpNotIn,
 							Values:   []string{"kube-system"},

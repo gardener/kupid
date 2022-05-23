@@ -18,7 +18,6 @@ spec:
   deployment:
     deploymentRefs:
     - name: kupid
-    policy: AlwaysExceptNoShoots
   resources:
   - kind: Extension
     type: ClusterPodSchdulingPolicy
