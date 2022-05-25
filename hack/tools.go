@@ -22,4 +22,5 @@ import (
 	// _ "github.com/gardener/gardener/extensions"
 	_ "github.com/gardener/gardener/hack"
 	_ "github.com/onsi/ginkgo/ginkgo"
+	_ "golang.org/x/lint/golint"
 )
