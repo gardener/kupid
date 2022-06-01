@@ -42,18 +42,18 @@ import (
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
 	"github.com/gardener/kupid/pkg/webhook"
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 )
 
 var (
 	scheme                 = runtime.NewScheme()
 	setupLog               = ctrl.Log.WithName("setup")
-	mutateOnCreateOrUpdate = []admissionregistrationv1beta1.OperationType{
-		admissionregistrationv1beta1.Create,
-		admissionregistrationv1beta1.Update,
+	mutateOnCreateOrUpdate = []admissionregistrationv1.OperationType{
+		admissionregistrationv1.Create,
+		admissionregistrationv1.Update,
 	}
-	mutateOnCreate = []admissionregistrationv1beta1.OperationType{
-		admissionregistrationv1beta1.Create,
+	mutateOnCreate = []admissionregistrationv1.OperationType{
+		admissionregistrationv1.Create,
 	}
 )
 
@@ -216,11 +216,11 @@ func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutS
 	return nil
 }
 
-func buildWebhookClientConfig(namespace string, caBundle []byte) admissionregistrationv1beta1.WebhookClientConfig {
+func buildWebhookClientConfig(namespace string, caBundle []byte) admissionregistrationv1.WebhookClientConfig {
 	var path = webhook.WebhookPath
-	return admissionregistrationv1beta1.WebhookClientConfig{
+	return admissionregistrationv1.WebhookClientConfig{
 		CABundle: caBundle,
-		Service: &admissionregistrationv1beta1.ServiceReference{
+		Service: &admissionregistrationv1.ServiceReference{
 			Namespace: namespace,
 			Name:      webhookFullName,
 			Path:      &path,
@@ -228,10 +228,10 @@ func buildWebhookClientConfig(namespace string, caBundle []byte) admissionregist
 	}
 }
 
-func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operations []admissionregistrationv1beta1.OperationType) admissionregistrationv1beta1.RuleWithOperations {
-	return admissionregistrationv1beta1.RuleWithOperations{
+func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operations []admissionregistrationv1.OperationType) admissionregistrationv1.RuleWithOperations {
+	return admissionregistrationv1.RuleWithOperations{
 		Operations: operations,
-		Rule: admissionregistrationv1beta1.Rule{
+		Rule: admissionregistrationv1.Rule{
 			APIGroups:   []string{gv.Group},
 			APIVersions: []string{gv.Version},
 			Resources:   resources,
@@ -239,27 +239,28 @@ func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operati
 	}
 }
 
-type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn)
+type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn)
 
-func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
+// func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
+func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
 	var (
-		ignore = admissionregistrationv1beta1.Ignore
-		exact  = admissionregistrationv1beta1.Exact
-		none   = admissionregistrationv1beta1.SideEffectClassNone
+		ignore = admissionregistrationv1.Ignore
+		exact  = admissionregistrationv1.Exact
+		none   = admissionregistrationv1.SideEffectClassNone
 	)
 
-	obj := &admissionregistrationv1beta1.ValidatingWebhookConfiguration{
+	obj := &admissionregistrationv1.ValidatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: webhookFullName,
 		},
 	}
 
 	return obj, func() error {
-		obj.Webhooks = []admissionregistrationv1beta1.ValidatingWebhook{
+		obj.Webhooks = []admissionregistrationv1.ValidatingWebhook{
 			{
 				Name:         "validate." + kupidv1alpha1.GroupVersion.Group,
 				ClientConfig: clientConfig,
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
+				Rules: []admissionregistrationv1.RuleWithOperations{
 					buildRuleWithOperations(
 						kupidv1alpha1.GroupVersion,
 						[]string{
@@ -273,28 +274,31 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1beta1.Webhoo
 				MatchPolicy:    &exact,
 				SideEffects:    &none,
 				TimeoutSeconds: &timeoutSeconds,
+				AdmissionReviewVersions: []string{
+					"v1",
+				},
 			},
 		}
 		return nil
 	}
 }
 
-func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
+func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
 	var (
-		ignore     = admissionregistrationv1beta1.Ignore
-		equivalent = admissionregistrationv1beta1.Equivalent
-		none       = admissionregistrationv1beta1.SideEffectClassNone
-		ifNeeded   = admissionregistrationv1beta1.IfNeededReinvocationPolicy
+		ignore     = admissionregistrationv1.Ignore
+		equivalent = admissionregistrationv1.Equivalent
+		none       = admissionregistrationv1.SideEffectClassNone
+		ifNeeded   = admissionregistrationv1.IfNeededReinvocationPolicy
 	)
 
-	obj := &admissionregistrationv1beta1.MutatingWebhookConfiguration{
+	obj := &admissionregistrationv1.MutatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: webhookFullName,
 		},
 	}
 
 	return obj, func() error {
-		obj.Webhooks = []admissionregistrationv1beta1.MutatingWebhook{
+		obj.Webhooks = []admissionregistrationv1.MutatingWebhook{
 			{
 				Name: "mutate." + kupidv1alpha1.GroupVersion.Group,
 				NamespaceSelector: &metav1.LabelSelector{
@@ -307,7 +311,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 					},
 				},
 				ClientConfig: clientConfig,
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
+				Rules: []admissionregistrationv1.RuleWithOperations{
 					buildRuleWithOperations(
 						appsv1.SchemeGroupVersion,
 						[]string{
@@ -337,6 +341,9 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1beta1.WebhookC
 				SideEffects:        &none,
 				TimeoutSeconds:     &timeoutSeconds,
 				ReinvocationPolicy: &ifNeeded,
+				AdmissionReviewVersions: []string{
+					"v1",
+				},
 			},
 		}
 		return nil
