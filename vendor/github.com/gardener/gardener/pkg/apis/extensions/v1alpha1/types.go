@@ -15,9 +15,10 @@
 package v1alpha1
 
 import (
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 )
 
 // Status is the status of an Object.
@@ -32,15 +33,26 @@ type Status interface {
 	// GetLastOperation retrieves the LastOperation of a status.
 	// LastOperation may be nil.
 	GetLastOperation() *gardencorev1beta1.LastOperation
+	// SetLastOperation sets the LastOperation of a status.
+	SetLastOperation(*gardencorev1beta1.LastOperation)
 	// GetObservedGeneration retrieves the last generation observed by the extension controller.
 	GetObservedGeneration() int64
+	// SetObservedGeneration sets the ObservedGeneration of a status.
+	SetObservedGeneration(int64)
 	// GetLastError retrieves the LastError of a status.
 	// LastError may be nil.
 	GetLastError() *gardencorev1beta1.LastError
+	// SetLastError sets the LastError of a status.
+	SetLastError(*gardencorev1beta1.LastError)
 	// GetState retrieves the State of the extension
 	GetState() *runtime.RawExtension
-	// GetResources retrieves the list of named resource references referred to in the state by their names.
+	// SetState sets the State of the extension
+	SetState(state *runtime.RawExtension)
+	// GetResources retrieves the list of named resource references referred to in the State by their names.
 	GetResources() []gardencorev1beta1.NamedResourceReference
+	// SetResources sets a list of named resource references in the Status, that are referred by
+	// their names in the State.
+	SetResources(namedResourceReferences []gardencorev1beta1.NamedResourceReference)
 }
 
 // Spec is the spec section of an Object.
@@ -63,3 +75,9 @@ type Object interface {
 	// GetExtensionStatus retrieves the object's status.
 	GetExtensionStatus() Status
 }
+
+// ShootAlphaCSIMigrationKubernetesVersion is a constant for an annotation on the Shoot resource stating the Kubernetes
+// version for which the CSI migration shall be enabled.
+// Note that this annotation is alpha and can be removed anytime without further notice. Only use it if you know
+// what you do.
+const ShootAlphaCSIMigrationKubernetesVersion = "alpha.csimigration.shoot.extensions.gardener.cloud/kubernetes-version"

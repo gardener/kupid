@@ -36,7 +36,7 @@ fi
 cd "${SOURCE_PATH}"
 
 # Build Golint.
-go get -u golang.org/x/lint/golint
+go install -mod=vendor  ./vendor/golang.org/x/lint/golint
 
 ###############################################################################
 

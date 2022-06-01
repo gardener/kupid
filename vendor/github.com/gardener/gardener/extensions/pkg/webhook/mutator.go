@@ -16,29 +16,45 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
 // Mutator validates and if needed mutates objects.
 type Mutator interface {
 	// Mutate validates and if needed mutates the given object.
 	// "old" is optional and it must always be checked for nil.
-	Mutate(ctx context.Context, new, old runtime.Object) error
+	Mutate(ctx context.Context, new, old client.Object) error
 }
 
 // MutatorWithShootClient validates and if needed mutates objects. It needs the shoot client.
 type MutatorWithShootClient interface {
 	// Mutate validates and if needed mutates the given object.
 	// "old" is optional and it must always be checked for nil.
-	Mutate(ctx context.Context, new, old runtime.Object, shootClient client.Client) error
+	Mutate(ctx context.Context, new, old client.Object, shootClient client.Client) error
+}
+type mutatorWrapper struct {
+	Mutator
+}
+
+// InjectFunc calls the inject.Func on the handler mutators.
+func (d *mutatorWrapper) InjectFunc(f inject.Func) error {
+	if err := f(d.Mutator); err != nil {
+		return fmt.Errorf("could not inject into the mutator: %w", err)
+	}
+	return nil
+}
+
+func hybridMutator(mut Mutator) Mutator {
+	return &mutatorWrapper{mut}
 }
 
 // MutateFunc is a func to be used directly as an implementation for Mutator
-type MutateFunc func(ctx context.Context, new, old runtime.Object) error
+type MutateFunc func(ctx context.Context, new, old client.Object) error
 
 // Mutate validates and if needed mutates the given object.
-func (mf MutateFunc) Mutate(ctx context.Context, new, old runtime.Object) error {
+func (mf MutateFunc) Mutate(ctx context.Context, new, old client.Object) error {
 	return mf(ctx, new, old)
 }

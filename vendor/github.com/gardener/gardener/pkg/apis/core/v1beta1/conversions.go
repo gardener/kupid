@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint:revive
 package v1beta1
 
 import (
@@ -53,10 +54,10 @@ func addConversionFuncs(scheme *runtime.Scheme) error {
 	}
 
 	if err := scheme.AddFieldLabelConversionFunc(
-		SchemeGroupVersion.WithKind("Shoot"),
+		SchemeGroupVersion.WithKind("ControllerInstallation"),
 		func(label, value string) (string, string, error) {
 			switch label {
-			case "metadata.name", "metadata.namespace", core.ShootSeedName, core.ShootCloudProfileName:
+			case "metadata.name", core.RegistrationRefName, core.SeedRefName:
 				return label, value, nil
 			default:
 				return "", "", fmt.Errorf("field label not supported: %s", label)
@@ -66,8 +67,35 @@ func addConversionFuncs(scheme *runtime.Scheme) error {
 		return err
 	}
 
-	// Add non-generated conversion functions
-	return scheme.AddConversionFuncs()
+	if err := scheme.AddFieldLabelConversionFunc(
+		SchemeGroupVersion.WithKind("Project"),
+		func(label, value string) (string, string, error) {
+			switch label {
+			case "metadata.name", core.ProjectNamespace:
+				return label, value, nil
+			default:
+				return "", "", fmt.Errorf("field label not supported: %s", label)
+			}
+		},
+	); err != nil {
+		return err
+	}
+
+	if err := scheme.AddFieldLabelConversionFunc(
+		SchemeGroupVersion.WithKind("Shoot"),
+		func(label, value string) (string, string, error) {
+			switch label {
+			case "metadata.name", "metadata.namespace", core.ShootSeedName, core.ShootCloudProfileName, core.ShootStatusSeedName:
+				return label, value, nil
+			default:
+				return "", "", fmt.Errorf("field label not supported: %s", label)
+			}
+		},
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Convert_v1beta1_ProjectSpec_To_core_ProjectSpec(in *ProjectSpec, out *core.ProjectSpec, s conversion.Scope) error {

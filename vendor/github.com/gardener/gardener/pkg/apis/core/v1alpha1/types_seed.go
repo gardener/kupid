@@ -18,6 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
@@ -65,8 +66,8 @@ type SeedSpec struct {
 	Networks SeedNetworks `json:"networks" protobuf:"bytes,4,opt,name=networks"`
 	// Provider defines the provider type and region for this Seed cluster.
 	Provider SeedProvider `json:"provider" protobuf:"bytes,5,opt,name=provider"`
-	// SecretRef is a reference to a Secret object containing the Kubeconfig and the cloud provider credentials for
-	// the account the Seed cluster has been deployed to.
+	// SecretRef is a reference to a Secret object containing the Kubeconfig of the Kubernetes
+	// cluster to be registered as Seed.
 	// +optional
 	SecretRef *corev1.SecretReference `json:"secretRef,omitempty" protobuf:"bytes,6,opt,name=secretRef"`
 	// Taints describes taints on the seed.
@@ -78,6 +79,9 @@ type SeedSpec struct {
 	// Settings contains certain settings for this seed cluster.
 	// +optional
 	Settings *SeedSettings `json:"settings,omitempty" protobuf:"bytes,9,opt,name=settings"`
+	// Ingress configures Ingress specific settings of the Seed cluster. This field is immutable.
+	// +optional
+	Ingress *Ingress `json:"ingress,omitempty" protobuf:"bytes,10,opt,name=ingress"`
 }
 
 // SeedStatus is the status of a Seed.
@@ -97,16 +101,22 @@ type SeedStatus struct {
 	// Seed's generation, which is updated on mutation by the API Server.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,4,opt,name=observedGeneration"`
+	// ClusterIdentity is the identity of the Seed cluster. This field is immutable.
+	// +optional
+	ClusterIdentity *string `json:"clusterIdentity,omitempty" protobuf:"bytes,5,opt,name=clusterIdentity"`
+	// ClientCertificateExpirationTimestamp is the timestamp at which gardenlet's client certificate expires.
+	// +optional
+	ClientCertificateExpirationTimestamp *metav1.Time `json:"clientCertificateExpirationTimestamp,omitempty" protobuf:"bytes,6,opt,name=clientCertificateExpirationTimestamp"`
 }
 
 // SeedBackup contains the object store configuration for backups for shoot (currently only etcd).
 type SeedBackup struct {
-	// Provider is a provider name.
+	// Provider is a provider name. This field is immutable.
 	Provider string `json:"provider" protobuf:"bytes,1,opt,name=provider"`
 	// ProviderConfig is the configuration passed to BackupBucket resource.
 	// +optional
-	ProviderConfig *ProviderConfig `json:"providerConfig,omitempty" protobuf:"bytes,2,opt,name=providerConfig"`
-	// Region is a region name.
+	ProviderConfig *runtime.RawExtension `json:"providerConfig,omitempty" protobuf:"bytes,2,opt,name=providerConfig"`
+	// Region is a region name. This field is immutable.
 	// +optional
 	Region *string `json:"region,omitempty" protobuf:"bytes,3,opt,name=region"`
 	// SecretRef is a reference to a Secret object containing the cloud provider credentials for
@@ -118,18 +128,55 @@ type SeedBackup struct {
 // SeedDNS contains DNS-relevant information about this seed cluster.
 type SeedDNS struct {
 	// IngressDomain is the domain of the Seed cluster pointing to the ingress controller endpoint. It will be used
-	// to construct ingress URLs for system applications running in Shoot clusters.
-	IngressDomain string `json:"ingressDomain" protobuf:"bytes,1,opt,name=ingressDomain"`
+	// to construct ingress URLs for system applications running in Shoot clusters. This field is immutable.
+	// This will be removed in the next API version and replaced by spec.ingress.domain.
+	// +optional
+	IngressDomain *string `json:"ingressDomain,omitempty" protobuf:"bytes,1,opt,name=ingressDomain"`
+	// Provider configures a DNSProvider
+	// +optional
+	Provider *SeedDNSProvider `json:"provider,omitempty" protobuf:"bytes,2,opt,name=provider"`
+}
+
+// SeedDNSProvider configures a DNSProvider
+type SeedDNSProvider struct {
+	// Type describes the type of the dns-provider, for example `aws-route53`
+	Type string `json:"type" protobuf:"bytes,1,opt,name=type"`
+	// SecretRef is a reference to a Secret object containing cloud provider credentials used for registering external domains.
+	SecretRef corev1.SecretReference `json:"secretRef" protobuf:"bytes,2,opt,name=secretRef"`
+	// Domains contains information about which domains shall be included/excluded for this provider.
+	// +optional
+	Domains *DNSIncludeExclude `json:"domains,omitempty" protobuf:"bytes,3,opt,name=domains"`
+	// Zones contains information about which hosted zones shall be included/excluded for this provider.
+	// +optional
+	Zones *DNSIncludeExclude `json:"zones,omitempty" protobuf:"bytes,4,opt,name=zones"`
+}
+
+// Ingress configures the Ingress specific settings of the Seed cluster.
+type Ingress struct {
+	// Domain specifies the IngressDomain of the Seed cluster pointing to the ingress controller endpoint. It will be used
+	// to construct ingress URLs for system applications running in Shoot clusters. Once set this field is immutable.
+	Domain string `json:"domain" protobuf:"bytes,1,opt,name=domain"`
+	// Controller configures a Gardener managed Ingress Controller listening on the ingressDomain
+	Controller IngressController `json:"controller" protobuf:"bytes,2,opt,name=controller"`
+}
+
+// IngressController enables a Gardener managed Ingress Controller listening on the ingressDomain
+type IngressController struct {
+	// Kind defines which kind of IngressController to use, for example `nginx`
+	Kind string `json:"kind" protobuf:"bytes,1,opt,name=kind"`
+	// ProviderConfig specifies infrastructure specific configuration for the ingressController
+	// +optional
+	ProviderConfig *runtime.RawExtension `json:"providerConfig,omitempty" protobuf:"bytes,2,opt,name=providerConfig"`
 }
 
 // SeedNetworks contains CIDRs for the pod, service and node networks of a Kubernetes cluster.
 type SeedNetworks struct {
-	// Nodes is the CIDR of the node network.
+	// Nodes is the CIDR of the node network. This field is immutable.
 	// +optional
 	Nodes *string `json:"nodes,omitempty" protobuf:"bytes,1,opt,name=nodes"`
-	// Pods is the CIDR of the pod network.
+	// Pods is the CIDR of the pod network. This field is immutable.
 	Pods string `json:"pods" protobuf:"bytes,2,opt,name=pods"`
-	// Services is the CIDR of the service network.
+	// Services is the CIDR of the service network. This field is immutable.
 	Services string `json:"services" protobuf:"bytes,3,opt,name=services"`
 	// ShootDefaults contains the default networks CIDRs for shoots.
 	// +optional
@@ -152,7 +199,7 @@ type SeedProvider struct {
 	Type string `json:"type" protobuf:"bytes,1,opt,name=type"`
 	// ProviderConfig is the configuration passed to Seed resource.
 	// +optional
-	ProviderConfig *ProviderConfig `json:"providerConfig,omitempty" protobuf:"bytes,2,opt,name=providerConfig"`
+	ProviderConfig *runtime.RawExtension `json:"providerConfig,omitempty" protobuf:"bytes,2,opt,name=providerConfig"`
 	// Region is a name of a region.
 	Region string `json:"region" protobuf:"bytes,3,opt,name=region"`
 }
@@ -168,11 +215,21 @@ type SeedSettings struct {
 	// ShootDNS controls the shoot DNS settings for the seed.
 	// +optional
 	ShootDNS *SeedSettingShootDNS `json:"shootDNS,omitempty" protobuf:"bytes,3,opt,name=shootDNS"`
+	// LoadBalancerServices controls certain settings for services of type load balancer that are created in the seed.
+	// +optional
+	LoadBalancerServices *SeedSettingLoadBalancerServices `json:"loadBalancerServices,omitempty" protobuf:"bytes,4,opt,name=loadBalancerServices"`
+	// VerticalPodAutoscaler controls certain settings for the vertical pod autoscaler components deployed in the seed.
+	// +optional
+	VerticalPodAutoscaler *SeedSettingVerticalPodAutoscaler `json:"verticalPodAutoscaler,omitempty" protobuf:"bytes,5,opt,name=verticalPodAutoscaler"`
+	// SeedSettingOwnerChecks controls certain owner checks settings for shoots scheduled on this seed.
+	// +optional
+	OwnerChecks *SeedSettingOwnerChecks `json:"ownerChecks,omitempty" protobuf:"bytes,6,opt,name=ownerChecks"`
+	// DependencyWatchdog controls certain settings for the dependency-watchdog components deployed in the seed.
+	// +optional
+	DependencyWatchdog *SeedSettingDependencyWatchdog `json:"dependencyWatchdog,omitempty" protobuf:"bytes,7,opt,name=dependencyWatchdog"`
 }
 
-// SeedSettingExcessCapacityReservation controls the excess capacity reservation for shoot control planes in the
-// seed. When enabled then this is done via PodPriority and requires the Seed cluster to have Kubernetes version 1.11
-// or the PodPriority feature gate as well as the scheduling.k8s.io/v1alpha1 API group enabled.
+// SeedSettingExcessCapacityReservation controls the excess capacity reservation for shoot control planes in the seed.
 type SeedSettingExcessCapacityReservation struct {
 	// Enabled controls whether the excess capacity reservation should be enabled.
 	Enabled bool `json:"enabled" protobuf:"bytes,1,opt,name=enabled"`
@@ -193,6 +250,56 @@ type SeedSettingScheduling struct {
 	Visible bool `json:"visible" protobuf:"bytes,1,opt,name=visible"`
 }
 
+// SeedSettingLoadBalancerServices controls certain settings for services of type load balancer that are created in the
+// seed.
+type SeedSettingLoadBalancerServices struct {
+	// Annotations is a map of annotations that will be injected/merged into every load balancer service object.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,1,rep,name=annotations"`
+}
+
+// SeedSettingVerticalPodAutoscaler controls certain settings for the vertical pod autoscaler components deployed in the
+// seed.
+type SeedSettingVerticalPodAutoscaler struct {
+	// Enabled controls whether the VPA components shall be deployed into the garden namespace in the seed cluster. It
+	// is enabled by default because Gardener heavily relies on a VPA being deployed. You should only disable this if
+	// your seed cluster already has another, manually/custom managed VPA deployment.
+	Enabled bool `json:"enabled" protobuf:"bytes,1,opt,name=enabled"`
+}
+
+// SeedSettingOwnerChecks controls certain owner checks settings for shoots scheduled on this seed.
+type SeedSettingOwnerChecks struct {
+	// Enabled controls whether owner checks are enabled for shoots scheduled on this seed. It
+	// is enabled by default because it is a prerequisite for control plane migration.
+	Enabled bool `json:"enabled" protobuf:"bytes,1,opt,name=enabled"`
+}
+
+// SeedSettingDependencyWatchdog controls the dependency-watchdog settings for the seed.
+type SeedSettingDependencyWatchdog struct {
+	// Endpoint controls the endpoint settings for the dependency-watchdog for the seed.
+	// +optional
+	Endpoint *SeedSettingDependencyWatchdogEndpoint `json:"endpoint,omitempty" protobuf:"bytes,1,opt,name=endpoint"`
+	// Probe controls the probe settings for the dependency-watchdog for the seed.
+	// +optional
+	Probe *SeedSettingDependencyWatchdogProbe `json:"probe,omitempty" protobuf:"bytes,2,opt,name=probe"`
+}
+
+// SeedSettingDependencyWatchdogEndpoint controls the endpoint settings for the dependency-watchdog for the seed.
+type SeedSettingDependencyWatchdogEndpoint struct {
+	// Enabled controls whether the endpoint controller of the dependency-watchdog should be enabled. This controller
+	// helps to alleviate the delay where control plane components remain unavailable by finding the respective pods in
+	// CrashLoopBackoff status and restarting them once their dependants become ready and available again.
+	Enabled bool `json:"enabled" protobuf:"bytes,1,opt,name=enabled"`
+}
+
+// SeedSettingDependencyWatchdogProbe controls the probe settings for the dependency-watchdog for the seed.
+type SeedSettingDependencyWatchdogProbe struct {
+	// Enabled controls whether the probe controller of the dependency-watchdog should be enabled. This controller
+	// scales down the kube-controller-manager of shoot clusters in case their respective kube-apiserver is not
+	// reachable via its external ingress in order to avoid melt-down situations.
+	Enabled bool `json:"enabled" protobuf:"bytes,1,opt,name=enabled"`
+}
+
 // SeedTaint describes a taint on a seed.
 type SeedTaint struct {
 	// Key is the taint key to be applied to a seed.
@@ -203,20 +310,6 @@ type SeedTaint struct {
 }
 
 const (
-	// DeprecatedSeedTaintDisableCapacityReservation is a constant for a taint key on a seed that marks it for disabling
-	// excess capacity reservation. This can be useful for seed clusters which only host shooted seeds to reduce
-	// costs.
-	// deprecated
-	DeprecatedSeedTaintDisableCapacityReservation = "seed.gardener.cloud/disable-capacity-reservation"
-	// DeprecatedSeedTaintDisableDNS is a constant for a taint key on a seed that marks it for disabling DNS. All shoots
-	// using this seed won't get any DNS providers, DNS records, and no DNS extension controller is required to
-	// be installed here. This is useful for environment where DNS is not required.
-	// deprecated
-	DeprecatedSeedTaintDisableDNS = "seed.gardener.cloud/disable-dns"
-	// DeprecatedSeedTaintInvisible is a constant for a taint key on a seed that marks it as invisible. Invisible seeds
-	// are not considered by the gardener-scheduler.
-	// deprecated
-	DeprecatedSeedTaintInvisible = "seed.gardener.cloud/invisible"
 	// SeedTaintProtected is a constant for a taint key on a seed that marks it as protected. Protected seeds
 	// may only be used by shoots in the `garden` namespace.
 	SeedTaintProtected = "seed.gardener.cloud/protected"

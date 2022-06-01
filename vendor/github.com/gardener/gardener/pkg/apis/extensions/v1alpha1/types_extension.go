@@ -25,14 +25,21 @@ const ExtensionResource = "Extension"
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:resource:scope=Namespaced,path=extensions,shortName=ext,singular=extension
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name=Type,JSONPath=".spec.type",type=string,description="The type of the Extension resource."
+// +kubebuilder:printcolumn:name=Status,JSONPath=".status.lastOperation.state",type=string,description="Status of Extension resource."
+// +kubebuilder:printcolumn:name=Age,JSONPath=".metadata.creationTimestamp",type=date,description="creation timestamp"
 
 // Extension is a specification for a Extension resource.
 type Extension struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   ExtensionSpec   `json:"spec"`
+	// Specification of the Extension.
+	// If the object's deletion timestamp is set, this field is immutable.
+	Spec ExtensionSpec `json:"spec"`
+	// +optional
 	Status ExtensionStatus `json:"status"`
 }
 

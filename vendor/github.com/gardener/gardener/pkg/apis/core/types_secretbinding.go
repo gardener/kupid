@@ -22,14 +22,29 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// SecretBinding represents a binding to a secret in the same or another namespace.
 type SecretBinding struct {
 	metav1.TypeMeta
 	// Standard object metadata.
 	metav1.ObjectMeta
 	// SecretRef is a reference to a secret object in the same or another namespace.
+	// This field is immutable.
 	SecretRef corev1.SecretReference
 	// Quotas is a list of references to Quota objects in the same or another namespace.
+	// This field is immutable.
 	Quotas []corev1.ObjectReference
+	// Provider defines the provider type of the SecretBinding.
+	// This field is immutable when the SecretBindingProviderValidation feature gate is enabled.
+	Provider *SecretBindingProvider
+}
+
+// SecretBindingProvider defines the provider type of the SecretBinding.
+type SecretBindingProvider struct {
+	// Type is the type of the provider.
+	//
+	// For backwards compatibility, the field can contain multiple providers separated by a comma.
+	// However the usage of single SecretBinding (hence Secret) for different cloud providers is strongly discouraged.
+	Type string
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

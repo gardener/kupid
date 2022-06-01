@@ -28,7 +28,7 @@ limitations under the License.
 // The main entrypoint for controller-runtime is this root package, which
 // contains all of the common types needed to get started building controllers:
 //  import (
-//      controllers "sigs.k8s.io/controller-runtime"
+//      ctrl "sigs.k8s.io/controller-runtime"
 //  )
 //
 // The examples in this package walk through a basic controller setup.  The
@@ -58,7 +58,7 @@ limitations under the License.
 //
 // Controllers
 //
-// Controllers (pkg/controller) use events (pkg/events) to eventually trigger
+// Controllers (pkg/controller) use events (pkg/event) to eventually trigger
 // reconcile requests.  They may be constructed manually, but are often
 // constructed with a Builder (pkg/builder), which eases the wiring of event
 // sources (pkg/source), like Kubernetes API object changes, to event handlers
@@ -82,8 +82,11 @@ limitations under the License.
 // and writes directly to the API server, but clients can be constructed that
 // only talk to the API server, without a cache.  The Cache will auto-populate
 // with watched objects, as well as when other structured objects are
-// requested.  Caches may also have indexes, which can be created via a
-// FieldIndexer (pkg/client) obtained from the manager.  Indexes can used to
+// requested. The default split client does not promise to invalidate the cache
+// during writes (nor does it promise sequential create/get coherence), and code
+// should not assume a get immediately following a create/update will return
+// the updated resource. Caches may also have indexes, which can be created via
+// a FieldIndexer (pkg/client) obtained from the manager.  Indexes can used to
 // quickly and easily look up all objects with certain fields set.  Reconcilers
 // may retrieve event recorders (pkg/recorder) to emit events using the
 // manager.

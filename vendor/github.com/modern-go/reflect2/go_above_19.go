@@ -1,10 +1,14 @@
-//+build go1.9
+//go:build go1.9
+// +build go1.9
 
 package reflect2
 
 import (
 	"unsafe"
 )
+
+//go:linkname resolveTypeOff reflect.resolveTypeOff
+func resolveTypeOff(rtype unsafe.Pointer, off int32) unsafe.Pointer
 
 //go:linkname makemap reflect.makemap
 func makemap(rtype unsafe.Pointer, cap int) (m unsafe.Pointer)

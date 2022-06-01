@@ -16,12 +16,16 @@ package v1alpha1
 
 import (
 	"math"
+	"time"
 
-	"github.com/gardener/gardener/pkg/utils"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
+	"github.com/gardener/gardener/pkg/utils/timewindow"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 )
@@ -53,6 +57,14 @@ func SetDefaults_Project(obj *Project) {
 		if len(member.Role) == 0 && len(member.Roles) == 0 {
 			obj.Spec.Members[i].Role = ProjectMemberViewer
 		}
+	}
+
+	if obj.Spec.Namespace != nil && *obj.Spec.Namespace == v1beta1constants.GardenNamespace {
+		if obj.Spec.Tolerations == nil {
+			obj.Spec.Tolerations = &ProjectTolerations{}
+		}
+		addTolerations(&obj.Spec.Tolerations.Whitelist, Toleration{Key: SeedTaintProtected})
+		addTolerations(&obj.Spec.Tolerations.Defaults, Toleration{Key: SeedTaintProtected})
 	}
 }
 
@@ -92,58 +104,63 @@ func SetDefaults_Seed(obj *Seed) {
 	}
 
 	if obj.Spec.Settings.ExcessCapacityReservation == nil {
-		enabled := true
-		for _, taint := range obj.Spec.Taints {
-			if taint.Key == DeprecatedSeedTaintDisableCapacityReservation {
-				enabled = false
-			}
-		}
-		obj.Spec.Settings.ExcessCapacityReservation = &SeedSettingExcessCapacityReservation{Enabled: enabled}
+		obj.Spec.Settings.ExcessCapacityReservation = &SeedSettingExcessCapacityReservation{Enabled: true}
 	}
 
 	if obj.Spec.Settings.Scheduling == nil {
-		visible := true
-		for _, taint := range obj.Spec.Taints {
-			if taint.Key == DeprecatedSeedTaintInvisible {
-				visible = false
-			}
-		}
-		obj.Spec.Settings.Scheduling = &SeedSettingScheduling{Visible: visible}
+		obj.Spec.Settings.Scheduling = &SeedSettingScheduling{Visible: true}
 	}
 
 	if obj.Spec.Settings.ShootDNS == nil {
-		enabled := true
-		for _, taint := range obj.Spec.Taints {
-			if taint.Key == DeprecatedSeedTaintDisableDNS {
-				enabled = false
-			}
-		}
-		obj.Spec.Settings.ShootDNS = &SeedSettingShootDNS{Enabled: enabled}
+		obj.Spec.Settings.ShootDNS = &SeedSettingShootDNS{Enabled: true}
+	}
+
+	if obj.Spec.Settings.VerticalPodAutoscaler == nil {
+		obj.Spec.Settings.VerticalPodAutoscaler = &SeedSettingVerticalPodAutoscaler{Enabled: true}
+	}
+
+	if obj.Spec.Settings.OwnerChecks == nil {
+		obj.Spec.Settings.OwnerChecks = &SeedSettingOwnerChecks{Enabled: true}
+	}
+
+	if obj.Spec.Settings.DependencyWatchdog == nil {
+		obj.Spec.Settings.DependencyWatchdog = &SeedSettingDependencyWatchdog{}
+	}
+}
+
+// SetDefaults_SeedSettingDependencyWatchdog sets defaults for SeedSettingDependencyWatchdog objects.
+func SetDefaults_SeedSettingDependencyWatchdog(obj *SeedSettingDependencyWatchdog) {
+	if obj.Endpoint == nil {
+		obj.Endpoint = &SeedSettingDependencyWatchdogEndpoint{Enabled: true}
+	}
+	if obj.Probe == nil {
+		obj.Probe = &SeedSettingDependencyWatchdogProbe{Enabled: true}
 	}
 }
 
 // SetDefaults_Shoot sets default values for Shoot objects.
 func SetDefaults_Shoot(obj *Shoot) {
-	k8sVersionLessThan116, _ := versionutils.CompareVersions(obj.Spec.Kubernetes.Version, "<", "1.16")
-	// Error is ignored here because we cannot do anything meaningful with it.
-	// k8sVersionLessThan116 will default to `false`.
-
-	trueVar := true
-	falseVar := false
-
 	if obj.Spec.Kubernetes.AllowPrivilegedContainers == nil {
-		obj.Spec.Kubernetes.AllowPrivilegedContainers = &trueVar
+		obj.Spec.Kubernetes.AllowPrivilegedContainers = pointer.Bool(true)
 	}
 
 	if obj.Spec.Kubernetes.KubeAPIServer == nil {
 		obj.Spec.Kubernetes.KubeAPIServer = &KubeAPIServerConfig{}
 	}
 	if obj.Spec.Kubernetes.KubeAPIServer.EnableBasicAuthentication == nil {
-		if k8sVersionLessThan116 {
-			obj.Spec.Kubernetes.KubeAPIServer.EnableBasicAuthentication = &trueVar
-		} else {
-			obj.Spec.Kubernetes.KubeAPIServer.EnableBasicAuthentication = &falseVar
-		}
+		obj.Spec.Kubernetes.KubeAPIServer.EnableBasicAuthentication = pointer.Bool(false)
+	}
+	if obj.Spec.Kubernetes.KubeAPIServer.Requests == nil {
+		obj.Spec.Kubernetes.KubeAPIServer.Requests = &KubeAPIServerRequests{}
+	}
+	if obj.Spec.Kubernetes.KubeAPIServer.Requests.MaxNonMutatingInflight == nil {
+		obj.Spec.Kubernetes.KubeAPIServer.Requests.MaxNonMutatingInflight = pointer.Int32(400)
+	}
+	if obj.Spec.Kubernetes.KubeAPIServer.Requests.MaxMutatingInflight == nil {
+		obj.Spec.Kubernetes.KubeAPIServer.Requests.MaxMutatingInflight = pointer.Int32(200)
+	}
+	if obj.Spec.Kubernetes.KubeAPIServer.EventTTL == nil {
+		obj.Spec.Kubernetes.KubeAPIServer.EventTTL = &metav1.Duration{Duration: time.Hour}
 	}
 
 	if obj.Spec.Kubernetes.KubeControllerManager == nil {
@@ -152,6 +169,12 @@ func SetDefaults_Shoot(obj *Shoot) {
 	if obj.Spec.Kubernetes.KubeControllerManager.NodeCIDRMaskSize == nil {
 		obj.Spec.Kubernetes.KubeControllerManager.NodeCIDRMaskSize = calculateDefaultNodeCIDRMaskSize(obj.Spec.Kubernetes.Kubelet, obj.Spec.Provider.Workers)
 	}
+	if obj.Spec.Kubernetes.KubeControllerManager.PodEvictionTimeout == nil {
+		obj.Spec.Kubernetes.KubeControllerManager.PodEvictionTimeout = &metav1.Duration{Duration: 2 * time.Minute}
+	}
+	if obj.Spec.Kubernetes.KubeControllerManager.NodeMonitorGracePeriod == nil {
+		obj.Spec.Kubernetes.KubeControllerManager.NodeMonitorGracePeriod = &metav1.Duration{Duration: 2 * time.Minute}
+	}
 
 	if obj.Spec.Kubernetes.KubeProxy == nil {
 		obj.Spec.Kubernetes.KubeProxy = &KubeProxyConfig{}
@@ -159,6 +182,9 @@ func SetDefaults_Shoot(obj *Shoot) {
 	if obj.Spec.Kubernetes.KubeProxy.Mode == nil {
 		defaultProxyMode := ProxyModeIPTables
 		obj.Spec.Kubernetes.KubeProxy.Mode = &defaultProxyMode
+	}
+	if obj.Spec.Kubernetes.KubeProxy.Enabled == nil {
+		obj.Spec.Kubernetes.KubeProxy.Enabled = pointer.Bool(true)
 	}
 
 	if obj.Spec.Addons == nil {
@@ -181,14 +207,94 @@ func SetDefaults_Shoot(obj *Shoot) {
 		p := ShootPurposeEvaluation
 		obj.Spec.Purpose = &p
 	}
+
+	// In previous Gardener versions that weren't supporting tolerations, it was hard-coded to (only) allow shoots in the
+	// `garden` namespace to use seeds that had the 'protected' taint. In order to be backwards compatible, now with the
+	// introduction of tolerations, we add the 'protected' toleration to the garden namespace by default.
+	if obj.Namespace == v1beta1constants.GardenNamespace {
+		addTolerations(&obj.Spec.Tolerations, Toleration{Key: SeedTaintProtected})
+	}
+
+	if obj.Spec.Kubernetes.Kubelet == nil {
+		obj.Spec.Kubernetes.Kubelet = &KubeletConfig{}
+	}
+	if obj.Spec.Kubernetes.Kubelet.FailSwapOn == nil {
+		obj.Spec.Kubernetes.Kubelet.FailSwapOn = pointer.Bool(true)
+	}
+	if obj.Spec.Kubernetes.Kubelet.ImageGCHighThresholdPercent == nil {
+		obj.Spec.Kubernetes.Kubelet.ImageGCHighThresholdPercent = pointer.Int32(50)
+	}
+	if obj.Spec.Kubernetes.Kubelet.ImageGCLowThresholdPercent == nil {
+		obj.Spec.Kubernetes.Kubelet.ImageGCLowThresholdPercent = pointer.Int32(40)
+	}
+	if obj.Spec.Kubernetes.Kubelet.SerializeImagePulls == nil {
+		obj.Spec.Kubernetes.Kubelet.SerializeImagePulls = pointer.Bool(true)
+	}
+
+	var (
+		kubeReservedMemory = resource.MustParse("1Gi")
+		kubeReservedCPU    = resource.MustParse("80m")
+		kubeReservedPID    = resource.MustParse("20k")
+	)
+
+	if obj.Spec.Kubernetes.Kubelet.KubeReserved == nil {
+		obj.Spec.Kubernetes.Kubelet.KubeReserved = &KubeletConfigReserved{Memory: &kubeReservedMemory, CPU: &kubeReservedCPU}
+		obj.Spec.Kubernetes.Kubelet.KubeReserved.PID = &kubeReservedPID
+	} else {
+		if obj.Spec.Kubernetes.Kubelet.KubeReserved.Memory == nil {
+			obj.Spec.Kubernetes.Kubelet.KubeReserved.Memory = &kubeReservedMemory
+		}
+		if obj.Spec.Kubernetes.Kubelet.KubeReserved.CPU == nil {
+			obj.Spec.Kubernetes.Kubelet.KubeReserved.CPU = &kubeReservedCPU
+		}
+		if obj.Spec.Kubernetes.Kubelet.KubeReserved.PID == nil {
+			obj.Spec.Kubernetes.Kubelet.KubeReserved.PID = &kubeReservedPID
+		}
+	}
+
+	if obj.Spec.Maintenance == nil {
+		obj.Spec.Maintenance = &Maintenance{}
+	}
+
+	if obj.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication == nil {
+		obj.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication = pointer.Bool(false)
+	}
+
+	for i, worker := range obj.Spec.Provider.Workers {
+		kubernetesVersion := obj.Spec.Kubernetes.Version
+		if worker.Kubernetes != nil && worker.Kubernetes.Version != nil {
+			kubernetesVersion = *worker.Kubernetes.Version
+		}
+
+		if k8sVersionGreaterOrEqualThan122, _ := versionutils.CompareVersions(kubernetesVersion, ">=", "1.22"); !k8sVersionGreaterOrEqualThan122 {
+			// Error is ignored here because we cannot do anything meaningful with it.
+			// k8sVersionLessThan116 and k8sVersionGreaterOrEqualThan122 will default to `false`.
+			continue
+		}
+
+		if worker.CRI != nil {
+			continue
+		}
+
+		obj.Spec.Provider.Workers[i].CRI = &CRI{Name: CRINameContainerD}
+	}
+
+	if obj.Spec.SystemComponents == nil {
+		obj.Spec.SystemComponents = &SystemComponents{}
+	}
+	if obj.Spec.SystemComponents.CoreDNS == nil {
+		obj.Spec.SystemComponents.CoreDNS = &CoreDNS{}
+	}
+	if obj.Spec.SystemComponents.CoreDNS.Autoscaling == nil {
+		obj.Spec.SystemComponents.CoreDNS.Autoscaling = &CoreDNSAutoscaling{}
+	}
+	if obj.Spec.SystemComponents.CoreDNS.Autoscaling.Mode != CoreDNSAutoscalingModeHorizontal && obj.Spec.SystemComponents.CoreDNS.Autoscaling.Mode != CoreDNSAutoscalingModeClusterProportional {
+		obj.Spec.SystemComponents.CoreDNS.Autoscaling.Mode = CoreDNSAutoscalingModeHorizontal
+	}
 }
 
 // SetDefaults_Maintenance sets default values for Maintenance objects.
 func SetDefaults_Maintenance(obj *Maintenance) {
-	if obj == nil {
-		obj = &Maintenance{}
-	}
-
 	if obj.AutoUpdate == nil {
 		obj.AutoUpdate = &MaintenanceAutoUpdate{
 			KubernetesVersion:   true,
@@ -197,11 +303,43 @@ func SetDefaults_Maintenance(obj *Maintenance) {
 	}
 
 	if obj.TimeWindow == nil {
-		mt := utils.RandomMaintenanceTimeWindow()
+		mt := timewindow.RandomMaintenanceTimeWindow()
 		obj.TimeWindow = &MaintenanceTimeWindow{
 			Begin: mt.Begin().Formatted(),
 			End:   mt.End().Formatted(),
 		}
+	}
+}
+
+// SetDefaults_VerticalPodAutoscaler sets default values for VerticalPodAutoscaler objects.
+func SetDefaults_VerticalPodAutoscaler(obj *VerticalPodAutoscaler) {
+	if obj.EvictAfterOOMThreshold == nil {
+		v := DefaultEvictAfterOOMThreshold
+		obj.EvictAfterOOMThreshold = &v
+	}
+	if obj.EvictionRateBurst == nil {
+		v := DefaultEvictionRateBurst
+		obj.EvictionRateBurst = &v
+	}
+	if obj.EvictionRateLimit == nil {
+		v := DefaultEvictionRateLimit
+		obj.EvictionRateLimit = &v
+	}
+	if obj.EvictionTolerance == nil {
+		v := DefaultEvictionTolerance
+		obj.EvictionTolerance = &v
+	}
+	if obj.RecommendationMarginFraction == nil {
+		v := DefaultRecommendationMarginFraction
+		obj.RecommendationMarginFraction = &v
+	}
+	if obj.UpdaterInterval == nil {
+		v := DefaultUpdaterInterval
+		obj.UpdaterInterval = &v
+	}
+	if obj.RecommenderInterval == nil {
+		v := DefaultRecommenderInterval
+		obj.RecommenderInterval = &v
 	}
 }
 
@@ -212,6 +350,43 @@ func SetDefaults_Worker(obj *Worker) {
 	}
 	if obj.MaxUnavailable == nil {
 		obj.MaxUnavailable = &DefaultWorkerMaxUnavailable
+	}
+	if obj.SystemComponents == nil {
+		obj.SystemComponents = &WorkerSystemComponents{
+			Allow: DefaultWorkerSystemComponentsAllow,
+		}
+	}
+}
+
+// SetDefaults_ClusterAutoscaler sets default values for ClusterAutoscaler object.
+func SetDefaults_ClusterAutoscaler(obj *ClusterAutoscaler) {
+	if obj.ScaleDownDelayAfterAdd == nil {
+		obj.ScaleDownDelayAfterAdd = &metav1.Duration{Duration: 1 * time.Hour}
+	}
+	if obj.ScaleDownDelayAfterDelete == nil {
+		obj.ScaleDownDelayAfterDelete = &metav1.Duration{Duration: 0}
+	}
+	if obj.ScaleDownDelayAfterFailure == nil {
+		obj.ScaleDownDelayAfterFailure = &metav1.Duration{Duration: 3 * time.Minute}
+	}
+	if obj.ScaleDownUnneededTime == nil {
+		obj.ScaleDownUnneededTime = &metav1.Duration{Duration: 30 * time.Minute}
+	}
+	if obj.ScaleDownUtilizationThreshold == nil {
+		obj.ScaleDownUtilizationThreshold = pointer.Float64(0.5)
+	}
+	if obj.ScanInterval == nil {
+		obj.ScanInterval = &metav1.Duration{Duration: 10 * time.Second}
+	}
+	if obj.Expander == nil {
+		leastWaste := ClusterAutoscalerExpanderLeastWaste
+		obj.Expander = &leastWaste
+	}
+	if obj.MaxNodeProvisionTime == nil {
+		obj.MaxNodeProvisionTime = &metav1.Duration{Duration: 20 * time.Minute}
+	}
+	if obj.MaxGracefulTerminationSeconds == nil {
+		obj.MaxGracefulTerminationSeconds = pointer.Int32(600)
 	}
 }
 
@@ -226,12 +401,12 @@ func SetDefaults_NginxIngress(obj *NginxIngress) {
 // SetDefaults_ControllerResource sets default values for ControllerResource objects.
 func SetDefaults_ControllerResource(obj *ControllerResource) {
 	if obj.Primary == nil {
-		obj.Primary = pointer.BoolPtr(true)
+		obj.Primary = pointer.Bool(true)
 	}
 }
 
-// SetDefaults_ControllerDeployment sets default values for ControllerDeployment objects.
-func SetDefaults_ControllerDeployment(obj *ControllerDeployment) {
+// SetDefaults_ControllerRegistrationDeployment sets default values for ControllerDeployment objects.
+func SetDefaults_ControllerRegistrationDeployment(obj *ControllerRegistrationDeployment) {
 	p := ControllerDeploymentPolicyOnDemand
 	if obj.Policy == nil {
 		obj.Policy = &p
@@ -256,4 +431,21 @@ func calculateDefaultNodeCIDRMaskSize(kubelet *KubeletConfig, workers []Worker) 
 	// by having approximately twice as many available IP addresses as possible Pods, Kubernetes is able to mitigate IP address reuse as Pods are added to and removed from a node.
 	nodeCidrRange := int32(32 - int(math.Ceil(math.Log2(float64(maxPods*2)))))
 	return &nodeCidrRange
+}
+
+func addTolerations(tolerations *[]Toleration, additionalTolerations ...Toleration) {
+	existingTolerations := map[Toleration]struct{}{}
+	for _, toleration := range *tolerations {
+		existingTolerations[toleration] = struct{}{}
+	}
+
+	for _, toleration := range additionalTolerations {
+		if _, ok := existingTolerations[Toleration{Key: toleration.Key}]; ok {
+			continue
+		}
+		if _, ok := existingTolerations[toleration]; ok {
+			continue
+		}
+		*tolerations = append(*tolerations, toleration)
+	}
 }

@@ -3,6 +3,7 @@ REGISTRY            := eu.gcr.io/gardener-project/gardener
 
 IMAGE_REPOSITORY    := $(REGISTRY)/kupid
 IMAGE_TAG           := $(VERSION)
+REPO_ROOT           := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_REPOSITORY):$(IMAGE_TAG)
@@ -20,9 +21,10 @@ endif
 all: webhook
 
 revendor:
-	@env GO111MODULE=on go mod vendor -v
 	@env GO111MODULE=on go mod tidy -v
-
+	@env GO111MODULE=on go mod vendor -v
+	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
+	
 update-dependencies:
 	@env GO111MODULE=on go get -u
 	@make revendor
