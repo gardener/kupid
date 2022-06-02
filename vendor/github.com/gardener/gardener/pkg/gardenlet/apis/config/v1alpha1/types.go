@@ -20,6 +20,7 @@ import (
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	componentbaseconfigv1alpha1 "k8s.io/component-base/config/v1alpha1"
 	"k8s.io/klog"
@@ -163,6 +164,9 @@ type GardenletControllerConfiguration struct {
 	// ShootCare defines the configuration of the ShootCare controller.
 	// +optional
 	ShootCare *ShootCareControllerConfiguration `json:"shootCare,omitempty"`
+	// SeedCare defines the configuration of the SeedCare controller.
+	// +optional
+	SeedCare *SeedCareControllerConfiguration `json:"seedCare,omitempty"`
 	// ShootMigration defines the configuration of the ShootMigration controller.
 	// +optional
 	ShootMigration *ShootMigrationControllerConfiguration `json:"shootMigration,omitempty"`
@@ -175,6 +179,9 @@ type GardenletControllerConfiguration struct {
 	// ManagedSeedControllerConfiguration the configuration of the ManagedSeed controller.
 	// +optional
 	ManagedSeed *ManagedSeedControllerConfiguration `json:"managedSeed,omitempty"`
+	// ShootSecretControllerConfiguration the configuration of the ShootSecret controller.
+	// +optional
+	ShootSecret *ShootSecretControllerConfiguration `json:"shootSecret,omitempty"`
 }
 
 // BackupBucketControllerConfiguration defines the configuration of the BackupBucket
@@ -333,6 +340,18 @@ type ShootCareControllerConfiguration struct {
 	ConditionThresholds []ConditionThreshold `json:"conditionThresholds,omitempty"`
 }
 
+// SeedCareControllerConfiguration defines the configuration of the SeedCare
+// controller.
+type SeedCareControllerConfiguration struct {
+	// SyncPeriod is the duration how often the existing resources are reconciled (how
+	// often the health check of Seed clusters is performed
+	// +optional
+	SyncPeriod *metav1.Duration `json:"syncPeriod,omitempty"`
+	// ConditionThresholds defines the condition threshold per condition type.
+	// +optional
+	ConditionThresholds []ConditionThreshold `json:"conditionThresholds,omitempty"`
+}
+
 // ShootMigrationControllerConfiguration defines the configuration of the ShootMigration
 // controller.
 type ShootMigrationControllerConfiguration struct {
@@ -350,6 +369,13 @@ type ShootMigrationControllerConfiguration struct {
 	// LastOperationStaleDuration is the duration to consider the last operation stale after it was last updated.
 	// +optional
 	LastOperationStaleDuration *metav1.Duration `json:"lastOperationStaleDuration,omitempty"`
+}
+
+// ShootSecretControllerConfiguration defines the configuration of the ShootSecret controller.
+type ShootSecretControllerConfiguration struct {
+	// ConcurrentSyncs is the number of workers used for the controller to work on events.
+	// +optional
+	ConcurrentSyncs *int `json:"concurrentSyncs,omitempty"`
 }
 
 // StaleExtensionHealthChecks defines the configuration of the check for stale extension health checks.
@@ -461,7 +487,12 @@ type Loki struct {
 // GardenLoki contains configuration for the Loki in garden namespace.
 type GardenLoki struct {
 	// Priority is the priority value for the Loki
+	// +optional
 	Priority *int `json:"priority,omitempty" yaml:"priority,omitempty"`
+	// Storage is the disk storage capacity of the central Loki.
+	// Defaults to 100Gi.
+	// +optional
+	Storage *resource.Quantity `json:"storage,omitempty" yaml:"storage,omitempty"`
 }
 
 // ShootNodeLogging contains configuration for the shoot node logging.
@@ -559,6 +590,9 @@ type ETCDConfig struct {
 	// BackupCompactionController contains config specific to backup compaction controller
 	// +optional
 	BackupCompactionController *BackupCompactionController `json:"backupCompactionController,omitempty"`
+	// BackupLeaderElection contains configuration for the leader election for the etcd backup-restore sidecar.
+	// +optional
+	BackupLeaderElection *ETCDBackupLeaderElection `json:"backupLeaderElection,omitempty"`
 }
 
 // ETCDController contains config specific to ETCD controller
@@ -595,6 +629,16 @@ type BackupCompactionController struct {
 	// Defaults to 3 hours
 	// +optional
 	ActiveDeadlineDuration *metav1.Duration `json:"activeDeadlineDuration,omitempty"`
+}
+
+// ETCDBackupLeaderElection contains configuration for the leader election for the etcd backup-restore sidecar.
+type ETCDBackupLeaderElection struct {
+	// ReelectionPeriod defines the Period after which leadership status of corresponding etcd is checked.
+	// +optional
+	ReelectionPeriod *metav1.Duration `json:"reelectionPeriod,omitempty"`
+	// EtcdConnectionTimeout defines the timeout duration for etcd client connection during leader election.
+	// +optional
+	EtcdConnectionTimeout *metav1.Duration `json:"etcdConnectionTimeout,omitempty"`
 }
 
 // ExposureClassHandler contains configuration for an exposure class handler.
@@ -699,3 +743,6 @@ const (
 
 // DefaultControllerSyncPeriod is a default value for sync period for controllers.
 var DefaultControllerSyncPeriod = metav1.Duration{Duration: time.Minute}
+
+// DefaultCentralLokiStorage is a default value for garden/loki's storage.
+var DefaultCentralLokiStorage = resource.MustParse("100Gi")
