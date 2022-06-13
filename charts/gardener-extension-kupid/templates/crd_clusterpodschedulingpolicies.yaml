@@ -234,59 +234,16 @@ spec:
                                           strategic merge patch.
                                         items:
                                           type: string
-                                        values:
-                                          description: values is an array of string
-                                            values. If the operator is In or NotIn,
-                                            the values array must be non-empty. If
-                                            the operator is Exists or DoesNotExist,
-                                            the values array must be empty. This array
-                                            is replaced during a strategic merge patch.
-                                          items:
-                                            type: string
-                                          type: array
-                                      required:
-                                      - key
-                                      - operator
-                                      type: object
-                                    type: array
-                                  matchLabels:
-                                    additionalProperties:
-                                      type: string
-                                    description: matchLabels is a map of {key,value}
-                                      pairs. A single {key,value} in the matchLabels
-                                      map is equivalent to an element of matchExpressions,
-                                      whose key field is "key", the operator is "In",
-                                      and the values array contains only "value".
-                                      The requirements are ANDed.
+                                        type: array
+                                    required:
+                                    - key
+                                    - operator
                                     type: object
-                                type: object
-                              namespaces:
-                                description: namespaces specifies which namespaces
-                                  the labelSelector applies to (matches against);
-                                  null or empty list means "this pod's namespace"
-                                items:
-                                  type: string
-                                type: array
-                              topologyKey:
-                                description: This pod should be co-located (affinity)
-                                  or not co-located (anti-affinity) with the pods
-                                  matching the labelSelector in the specified namespaces,
-                                  where co-located is defined as running on a node
-                                  whose value of the label with key topologyKey matches
-                                  that of any node on which any of the selected pods
-                                  is running. Empty topologyKey is not allowed.
-                                type: string
-                            required:
-                            - topologyKey
-                            type: object
-                          weight:
-                            description: weight associated with matching the corresponding
-                              podAffinityTerm, in the range 1-100.
-                            format: int32
-                            type: integer
+                                  type: array
+                              type: object
+                            type: array
                         required:
-                        - podAffinityTerm
-                        - weight
+                        - nodeSelectorTerms
                         type: object
                     type: object
                   podAffinity:
@@ -317,22 +274,10 @@ spec:
                                   description: A label query over a set of resources,
                                     in this case pods.
                                   properties:
-                                    key:
-                                      description: key is the label key that the selector
-                                        applies to.
-                                      type: string
-                                    operator:
-                                      description: operator represents a key's relationship
-                                        to a set of values. Valid operators are In,
-                                        NotIn, Exists and DoesNotExist.
-                                      type: string
-                                    values:
-                                      description: values is an array of string values.
-                                        If the operator is In or NotIn, the values
-                                        array must be non-empty. If the operator is
-                                        Exists or DoesNotExist, the values array must
-                                        be empty. This array is replaced during a
-                                        strategic merge patch.
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label
+                                        selector requirements. The requirements are
+                                        ANDed.
                                       items:
                                         description: A label selector requirement
                                           is a selector that contains values, a key,
@@ -515,30 +460,10 @@ spec:
                                           replaced during a strategic merge patch.
                                         items:
                                           type: string
-                                        values:
-                                          description: values is an array of string
-                                            values. If the operator is In or NotIn,
-                                            the values array must be non-empty. If
-                                            the operator is Exists or DoesNotExist,
-                                            the values array must be empty. This array
-                                            is replaced during a strategic merge patch.
-                                          items:
-                                            type: string
-                                          type: array
-                                      required:
-                                      - key
-                                      - operator
-                                      type: object
-                                    type: array
-                                  matchLabels:
-                                    additionalProperties:
-                                      type: string
-                                    description: matchLabels is a map of {key,value}
-                                      pairs. A single {key,value} in the matchLabels
-                                      map is equivalent to an element of matchExpressions,
-                                      whose key field is "key", the operator is "In",
-                                      and the values array contains only "value".
-                                      The requirements are ANDed.
+                                        type: array
+                                    required:
+                                    - key
+                                    - operator
                                     type: object
                                   type: array
                                 matchLabels:
@@ -658,22 +583,10 @@ spec:
                                   description: A label query over a set of resources,
                                     in this case pods.
                                   properties:
-                                    key:
-                                      description: key is the label key that the selector
-                                        applies to.
-                                      type: string
-                                    operator:
-                                      description: operator represents a key's relationship
-                                        to a set of values. Valid operators are In,
-                                        NotIn, Exists and DoesNotExist.
-                                      type: string
-                                    values:
-                                      description: values is an array of string values.
-                                        If the operator is In or NotIn, the values
-                                        array must be non-empty. If the operator is
-                                        Exists or DoesNotExist, the values array must
-                                        be empty. This array is replaced during a
-                                        strategic merge patch.
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label
+                                        selector requirements. The requirements are
+                                        ANDed.
                                       items:
                                         description: A label selector requirement
                                           is a selector that contains values, a key,
@@ -997,24 +910,11 @@ spec:
                       is "In", and the values array contains only "value". The requirements
                       are ANDed.
                     type: object
-                  type: array
-                matchLabels:
-                  additionalProperties:
-                    type: string
-                  description: matchLabels is a map of {key,value} pairs. A single
-                    {key,value} in the matchLabels map is equivalent to an element
-                    of matchExpressions, whose key field is "key", the operator is
-                    "In", and the values array contains only "value". The requirements
-                    are ANDed.
-                  type: object
-              type: object
-            nodeName:
-              description: NodeName is a request to schedule this pod onto a specific
-                node. If it is non-empty, the scheduler simply schedules this pod
-                onto that node, assuming that it fits resource requirements.
-              type: string
-            nodeSelector:
-              additionalProperties:
+                type: object
+              nodeName:
+                description: NodeName is a request to schedule this pod onto a specific
+                  node. If it is non-empty, the scheduler simply schedules this pod
+                  onto that node, assuming that it fits resource requirements.
                 type: string
               nodeSelector:
                 additionalProperties:
