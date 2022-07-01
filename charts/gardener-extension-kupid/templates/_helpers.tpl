@@ -37,7 +37,3 @@ app.kubernetes.io/name: {{ include "policy-name" . }}
 {{- define "policy-label-release" -}}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
-
-{{- define "priorityclassversion" -}}
-scheduling.k8s.io/v1
-{{- end -}}
