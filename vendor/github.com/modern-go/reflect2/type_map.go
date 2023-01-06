@@ -10,6 +10,7 @@ import (
 )
 
 // typelinks2 for 1.7 ~
+//
 //go:linkname typelinks2 reflect.typelinks
 func typelinks2() (sections []unsafe.Pointer, offset [][]int32)
 

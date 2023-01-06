@@ -154,9 +154,12 @@ func New(config *rest.Config, opts Options) (Cache, error) {
 // honoring the options argument, this is useful to specify options like
 // SelectorsByObject
 // WARNING: if SelectorsByObject is specified. filtered out resources are not
-//          returned.
+//
+//	returned.
+//
 // WARNING: if UnsafeDisableDeepCopy is enabled, you must DeepCopy any object
-//          returned from cache get/list before mutating it.
+//
+//	returned from cache get/list before mutating it.
 func BuilderWithOptions(options Options) NewCacheFunc {
 	return func(config *rest.Config, opts Options) (Cache, error) {
 		if options.Scheme == nil {

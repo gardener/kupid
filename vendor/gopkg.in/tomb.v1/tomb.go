@@ -51,13 +51,12 @@
 //
 // For background and a detailed example, see the following blog post:
 //
-//   http://blog.labix.org/2011/10/09/death-of-goroutines-under-control
+//	http://blog.labix.org/2011/10/09/death-of-goroutines-under-control
 //
 // For a more complex code snippet demonstrating the use of multiple
 // goroutines with a single Tomb, see:
 //
-//   http://play.golang.org/p/Xh7qWsDPZP
-//
+//	http://play.golang.org/p/Xh7qWsDPZP
 package tomb
 
 import (

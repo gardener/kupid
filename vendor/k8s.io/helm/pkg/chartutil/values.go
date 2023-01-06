@@ -152,11 +152,11 @@ func ReadValuesFile(filename string) (Values, error) {
 //
 // Values are coalesced together using the following rules:
 //
-//	- Values in a higher level chart always override values in a lower-level
-//		dependency chart
-//	- Scalar values and arrays are replaced, maps are merged
-//	- A chart has access to all of the variables for it, as well as all of
-//		the values destined for its dependencies.
+//   - Values in a higher level chart always override values in a lower-level
+//     dependency chart
+//   - Scalar values and arrays are replaced, maps are merged
+//   - A chart has access to all of the variables for it, as well as all of
+//     the values destined for its dependencies.
 func CoalesceValues(chrt *chart.Chart, vals *chart.Config) (Values, error) {
 	cvals := Values{}
 	// Parse values if not nil. We merge these at the top level because

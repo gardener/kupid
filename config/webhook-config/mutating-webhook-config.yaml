@@ -3,7 +3,10 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: kupid
 webhooks:
-- clientConfig:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     caBundle: Cg==
     service:
       name: kupid
