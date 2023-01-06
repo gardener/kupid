@@ -55,7 +55,7 @@ type JUnitReporter struct {
 	ReporterConfig config.DefaultReporterConfigType
 }
 
-//NewJUnitReporter creates a new JUnit XML reporter.  The XML will be stored in the passed in filename.
+// NewJUnitReporter creates a new JUnit XML reporter.  The XML will be stored in the passed in filename.
 func NewJUnitReporter(filename string) *JUnitReporter {
 	return &JUnitReporter{
 		filename: filename,
