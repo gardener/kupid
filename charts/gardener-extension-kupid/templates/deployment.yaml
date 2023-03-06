@@ -20,6 +20,8 @@ spec:
       prometheus.io/port: {{ .Values.metricsPort }}
     metadata:
       labels:
+        networking.gardener.cloud/to-runtime-apiserver: allowed
+        networking.gardener.cloud/to-dns: allowed
 {{ include "labels" . | indent 8 }}
     spec:
       serviceAccountName: {{ include "name" . }}
