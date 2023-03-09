@@ -18,7 +18,7 @@ spec:
     name: webhook-server
     protocol: TCP
     targetPort: {{ .Values.webhookConfig.serverPort }}
-  - port: 8080
+  - port: {{ .Values.metricsPort }}
     name: metrics
     protocol: TCP
-    targetPort: 8080
+    targetPort: {{ .Values.metricsPort }}

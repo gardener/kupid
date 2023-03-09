@@ -14,6 +14,10 @@ spec:
     matchLabels:
 {{ include "labels" . | indent 6 }}
   template:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/name: "kupid"
+      prometheus.io/port: {{ .Values.metricsPort }}
     metadata:
       labels:
 {{ include "labels" . | indent 8 }}
@@ -40,17 +44,17 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8080
+            port: {{ .Values.healthPort }}
           initialDelaySeconds: 30
           periodSeconds: 5
         ports:
         - containerPort: {{ .Values.webhookConfig.serverPort }}
           name: webhook-server
           protocol: TCP
-        - containerPort: 8080
+        - containerPort: {{ .Values.healthPort }}
           name: healthz
           protocol: TCP
-        - containerPort: 8081
+        - containerPort: {{ .Values.metricsPort }}
           name: metrics
           protocol: TCP
 {{- if .Values.resources }}
