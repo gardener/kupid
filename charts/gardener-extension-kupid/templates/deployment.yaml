@@ -4,6 +4,7 @@ metadata:
   name: {{ include "name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
+    high-availability-config.resources.gardener.cloud/type: server
 {{ include "labels" . | indent 4 }}
 spec:
   priorityClassName: gardener-system-900
