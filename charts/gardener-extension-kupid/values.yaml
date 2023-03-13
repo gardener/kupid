@@ -28,6 +28,9 @@ webhookConfig:
   serverPort: 9443
   timeoutSeconds: 10
 
+healthPort: 8080
+metricsPort: 8081
+
 # policies:
 #   etcd:
 #     namespaceLabels: {}
