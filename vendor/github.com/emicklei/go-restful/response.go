@@ -14,7 +14,7 @@ import (
 // DefaultResponseMimeType is DEPRECATED, use DefaultResponseContentType(mime)
 var DefaultResponseMimeType string
 
-// PrettyPrintResponses controls the indentation feature of XML and JSON serialization
+//PrettyPrintResponses controls the indentation feature of XML and JSON serialization
 var PrettyPrintResponses = true
 
 // Response is a wrapper on the actual http ResponseWriter
@@ -40,8 +40,7 @@ func NewResponse(httpWriter http.ResponseWriter) *Response {
 // If Accept header matching fails, fall back to this type.
 // Valid values are restful.MIME_JSON and restful.MIME_XML
 // Example:
-//
-//	restful.DefaultResponseContentType(restful.MIME_JSON)
+// 	restful.DefaultResponseContentType(restful.MIME_JSON)
 func DefaultResponseContentType(mime string) {
 	DefaultResponseMimeType = mime
 }
@@ -175,15 +174,16 @@ func (r *Response) WriteHeaderAndJson(status int, value interface{}, contentType
 	return writeJSON(r, status, contentType, value)
 }
 
-// WriteError write the http status and the error string on the response. err can be nil.
-func (r *Response) WriteError(httpStatus int, err error) error {
+// WriteError writes the http status and the error string on the response. err can be nil.
+// Return an error if writing was not successful.
+func (r *Response) WriteError(httpStatus int, err error) (writeErr error) {
 	r.err = err
 	if err == nil {
-		r.WriteErrorString(httpStatus, "")
+		writeErr = r.WriteErrorString(httpStatus, "")
 	} else {
-		r.WriteErrorString(httpStatus, err.Error())
+		writeErr = r.WriteErrorString(httpStatus, err.Error())
 	}
-	return err
+	return writeErr
 }
 
 // WriteServiceError is a convenience method for a responding with a status and a ServiceError
