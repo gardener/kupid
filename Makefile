@@ -19,13 +19,16 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+set-permissions:
+	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
+
 all: webhook
 
-revendor:
+revendor: set-permissions
 	@env GO111MODULE=on go mod tidy -v
 	@env GO111MODULE=on go mod vendor -v
-	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
-	
+	@make set-permissions
+
 update-dependencies:
 	@env GO111MODULE=on go get -u
 	@make revendor
@@ -75,7 +78,7 @@ undeploy-with-certmanager: manifests
 	kustomize build config/with-certmanager | kubectl delete -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
+manifests: set-permissions controller-gen
 	"$(CONTROLLER_GEN)" $(CRD_OPTIONS) webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
@@ -87,7 +90,7 @@ vet:
 	go vet ./...
 
 # Generate code
-generate: controller-gen
+generate: set-permissions controller-gen
 	"$(CONTROLLER_GEN)" object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	@./vendor/github.com/gardener/gardener/hack/generate.sh ./charts/...
 
