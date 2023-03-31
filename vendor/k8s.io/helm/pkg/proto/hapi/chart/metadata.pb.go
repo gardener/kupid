@@ -99,9 +99,9 @@ func (m *Maintainer) GetUrl() string {
 	return ""
 }
 
-// Metadata for a Chart file. This models the structure of a Chart.yaml file.
+// 	Metadata for a Chart file. This models the structure of a Chart.yaml file.
 //
-// Spec: https://k8s.io/helm/blob/master/docs/design/chart_format.md#the-chart-file
+// 	Spec: https://k8s.io/helm/blob/master/docs/design/chart_format.md#the-chart-file
 type Metadata struct {
 	// The name of the chart
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -294,9 +294,7 @@ func init() {
 	proto.RegisterEnum("hapi.chart.Metadata_Engine", Metadata_Engine_name, Metadata_Engine_value)
 }
 
-func init() {
-	proto.RegisterFile("hapi/chart/metadata.proto", fileDescriptor_metadata_bafee76586953fd5)
-}
+func init() { proto.RegisterFile("hapi/chart/metadata.proto", fileDescriptor_metadata_bafee76586953fd5) }
 
 var fileDescriptor_metadata_bafee76586953fd5 = []byte{
 	// 435 bytes of a gzipped FileDescriptorProto
