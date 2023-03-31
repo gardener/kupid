@@ -27,6 +27,7 @@ vpa:
 webhookConfig:
   serverPort: 9443
   timeoutSeconds: 10
+  failurePolicy: Ignore
 
 healthPort: 8080
 metricsPort: 8081

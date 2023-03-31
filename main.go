@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -67,6 +68,7 @@ const (
 	flagCertDir               = "cert-dir"
 	flagRegisterWebhooks      = "register-webhooks"
 	flagWebhookTimeoutSeconds = "webhook-timeout-seconds"
+	flagWebhookFailurePolicy  = "webhook-failure-policy"
 	flagSyncPeriod            = "sync-period"
 	flagQPS                   = "qps"
 	flagBurst                 = "burst"
@@ -74,6 +76,7 @@ const (
 
 	defaultWebhookPort           = 9443
 	defaultWebhookTimeoutSeconds = 30
+	defaultWebhookFailurePolicy  = string(admissionregistrationv1.Ignore)
 	defaultMetricsAddr           = ":8081"
 	defaultHealthzAddr           = ":8080"
 	defaultSyncPeriod            = 1 * time.Hour
@@ -97,6 +100,7 @@ func main() {
 		certDir               string
 		registerWebhooks      bool
 		webhookTimeoutSeconds int
+		webhookFailurePolicy  string
 		syncPeriod            time.Duration
 		qps                   float64
 		burst                 int
@@ -110,11 +114,18 @@ func main() {
 	flag.StringVar(&certDir, flagCertDir, "./certs", "The directory where the serving certs are kept.")
 	flag.BoolVar(&registerWebhooks, flagRegisterWebhooks, false, "If enabled registers the webhook configurations automatically. The webhook is assumed to be reachable by a service with the name 'gardener-extension-kupid' within the same namespace. If necessary this will also generate TLS certificates for the webhook as well as the webhook configurations. The generated certificates will be published by creating a secret with the name 'gardener-extension-webhook-cert'. If the secret already exists then it is reused and no new certificates are generated.")
 	flag.IntVar(&webhookTimeoutSeconds, flagWebhookTimeoutSeconds, defaultWebhookTimeoutSeconds, "If webhooks are registered automatically then they are configured with this timeout.")
+	flag.StringVar(&webhookFailurePolicy, flagWebhookFailurePolicy, defaultWebhookFailurePolicy, "If webhooks are enabled, this flag sets the failure policy set for the webhook configurations deployed by Kupid. Allowed values are `Ignore` and `Fail`.")
 	flag.DurationVar(&syncPeriod, flagSyncPeriod, defaultSyncPeriod, "SyncPeriod determines the minimum frequency at which watched resources are reconciled. A lower period will correct entropy more quickly, but reduce responsiveness to change if there are many watched resources. Change this value only if you know what you are doing.")
 	flag.Float64Var(&qps, flagQPS, float64(rest.DefaultQPS), "Throttling QPS configuration for the client to host apiserver.")
 	flag.IntVar(&burst, flagBurst, rest.DefaultBurst, "Throttling burst configuration for the client to host apiserver.")
 
 	flag.Parse()
+
+	// validations
+	if webhookFailurePolicy != string(admissionregistrationv1.Ignore) && webhookFailurePolicy != string(admissionregistrationv1.Fail) {
+		setupLog.Error(fmt.Errorf("provided failure policy %s is invalid; allowed values are `Ignore` and `Fail`", webhookFailurePolicy), "flag validation failed")
+		os.Exit(1)
+	}
 
 	level := uberzap.NewAtomicLevelAt(*logLevel)
 	ctrl.SetLogger(zap.New(zap.Level(&level)))
@@ -127,6 +138,7 @@ func main() {
 		flagCertDir, certDir,
 		flagRegisterWebhooks, registerWebhooks,
 		flagWebhookTimeoutSeconds, webhookTimeoutSeconds,
+		flagWebhookFailurePolicy, webhookFailurePolicy,
 		flagSyncPeriod, syncPeriod,
 		flagQPS, qps,
 		flagBurst, burst,
@@ -156,7 +168,7 @@ func main() {
 	}()
 
 	if registerWebhooks {
-		if err := doRegisterWebhooks(mgr, certDir, namespace, int32(webhookTimeoutSeconds)); err != nil {
+		if err := doRegisterWebhooks(mgr, certDir, namespace, int32(webhookTimeoutSeconds), admissionregistrationv1.FailurePolicyType(webhookFailurePolicy)); err != nil {
 			setupLog.Error(err, "Error registering webhooks. Aborting startup...")
 			os.Exit(1)
 		}
@@ -176,8 +188,8 @@ func main() {
 	}
 }
 
-func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutSeconds int32) error {
-	client, err := getClient(mgr)
+func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) error {
+	k8sClient, err := getClient(mgr)
 	if err != nil {
 		return err
 	}
@@ -207,8 +219,8 @@ func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutS
 		newValidatingWebhookConfig,
 		newMutatingWebhookConfig,
 	} {
-		obj, mutateFn := f(clientConfig, timeoutSeconds)
-		if _, err := controllerutil.CreateOrUpdate(ctx, client, obj, mutateFn); err != nil {
+		obj, mutateFn := f(clientConfig, timeoutSeconds, webhookFailurePolicy)
+		if _, err := controllerutil.CreateOrUpdate(ctx, k8sClient, obj, mutateFn); err != nil {
 			return err
 		}
 	}
@@ -239,14 +251,13 @@ func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operati
 	}
 }
 
-type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn)
+type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) (client.Object, controllerutil.MutateFn)
 
 // func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
-func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
+func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) (client.Object, controllerutil.MutateFn) {
 	var (
-		ignore = admissionregistrationv1.Ignore
-		exact  = admissionregistrationv1.Exact
-		none   = admissionregistrationv1.SideEffectClassNone
+		exact = admissionregistrationv1.Exact
+		none  = admissionregistrationv1.SideEffectClassNone
 	)
 
 	obj := &admissionregistrationv1.ValidatingWebhookConfiguration{
@@ -270,7 +281,7 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClie
 						mutateOnCreateOrUpdate,
 					),
 				},
-				FailurePolicy:  &ignore,
+				FailurePolicy:  &webhookFailurePolicy,
 				MatchPolicy:    &exact,
 				SideEffects:    &none,
 				TimeoutSeconds: &timeoutSeconds,
@@ -283,9 +294,8 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClie
 	}
 }
 
-func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
+func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) (client.Object, controllerutil.MutateFn) {
 	var (
-		ignore     = admissionregistrationv1.Ignore
 		equivalent = admissionregistrationv1.Equivalent
 		none       = admissionregistrationv1.SideEffectClassNone
 		ifNeeded   = admissionregistrationv1.IfNeededReinvocationPolicy
@@ -336,7 +346,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClient
 						mutateOnCreateOrUpdate,
 					),
 				},
-				FailurePolicy:      &ignore,
+				FailurePolicy:      &webhookFailurePolicy,
 				MatchPolicy:        &equivalent,
 				SideEffects:        &none,
 				TimeoutSeconds:     &timeoutSeconds,

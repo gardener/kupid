@@ -87,7 +87,7 @@ func (w *Webhook) registerProcessorFactory(pf processorFactory) error {
 	var gvk = pf.kind()
 	log.Info("Registering processor factory", "kind", gvk)
 	if _, ok := w.processorFactories[gvk]; ok {
-		return fmt.Errorf("Re-registering processor factory is not allowed for kind: %s", gvk)
+		return fmt.Errorf("re-registering processor factory is not allowed for kind: %s", gvk)
 	}
 	w.processorFactories[gvk] = pf
 	return nil
@@ -105,7 +105,7 @@ func (w *Webhook) registerProcessorFactories(pfs []processorFactory) error {
 func (w *Webhook) getProcessorFactoryFor(gvk metav1.GroupVersionKind) (processorFactory, error) {
 	pf, ok := w.processorFactories[gvk]
 	if !ok {
-		return pf, fmt.Errorf("No processor factory registered for kind: %s", gvk)
+		return pf, fmt.Errorf("no processor factory registered for kind: %s", gvk)
 	}
 	return pf, nil
 }
@@ -124,13 +124,13 @@ func (w *Webhook) InjectAPIReader(r client.Reader) error {
 
 func (w *Webhook) waitForCacheSyncOnce(ctx context.Context) {
 	w.once.Do(func() {
-		log.Info("Waitng for the caches to be synced")
+		log.Info("Waiting for caches to be synced")
 		if ok := w.cache.WaitForCacheSync(ctx); !ok {
 			err := fmt.Errorf("failed to wait for caches to sync")
 			log.Error(err, "Could not wait for Cache to sync")
 		}
 
-		log.Info("Cache initialied")
+		log.Info("Cache initialized")
 	})
 }
 
@@ -182,7 +182,6 @@ func (w *Webhook) Start(ctx context.Context) error {
 		return err
 	}
 
-	log.Info("Stopping webhook")
 	return nil
 }
 
@@ -195,9 +194,7 @@ func (w *Webhook) SetupWithManager(mgr ctrl.Manager) error {
 	mgr.GetWebhookServer().Register(WebhookPath, &admission.Webhook{Handler: w})
 	log.Info("Webhook registered")
 
-	mgr.AddHealthzCheck("webhook", func(req *http.Request) error { return nil })
-
-	return nil
+	return mgr.AddHealthzCheck("webhook", func(req *http.Request) error { return nil })
 }
 
 // InjectDecoder injects the decoder into a webhook.
@@ -211,12 +208,13 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	l := log.WithValues("resource", req.Resource, "namespace", req.Namespace, "name", req.Name)
 
 	l.V(1).Info("Handling", "req", req)
+	l.Info("Handling request")
 
 	w.waitForCacheSyncOnce(ctx)
 
 	kupidRequestsTotal.With(prometheus.Labels{labelType: typeProcessed}).Inc()
 
-	//Get the namespace in the request
+	// Get the namespace in the request
 	namespace := req.Namespace
 
 	pf, err := w.getProcessorFactoryFor(req.Kind)
@@ -257,7 +255,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeError}).Inc()
 		return admission.Allowed(err.Error())
 	} else if !mutated {
-		l.V(1).Info("Nothing mutated", "obj", obj)
+		l.V(1).Info("Nothing mutated for request")
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
 		return admission.Allowed("")
 	}
@@ -274,6 +272,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	res := admission.PatchResponseFromRaw(req.Object.Raw, marshalled)
 	if len(res.Patches) > 0 {
 		l.V(1).Info("Mutated response", "res", res)
+		l.Info("Mutated request")
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeMutated}).Inc()
 	}
