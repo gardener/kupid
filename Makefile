@@ -12,6 +12,9 @@ IMG ?= $(IMAGE_REPOSITORY):$(IMAGE_TAG)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 CONTROLLER_GEN_REQVERSION := v0.6.2
 
+# Set cert-manager version to deploy
+CERTMANAGER_VERSION := v1.12.0
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -70,12 +73,15 @@ undeploy: manifests
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy-with-certmanager: manifests
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/${CERTMANAGER_VERSION}/cert-manager.yaml
+	kubectl -n cert-manager wait --for=condition=Ready pod -l app=webhook,app.kubernetes.io/instance=cert-manager
 	cd config/webhook && kustomize edit set image kupid=${IMG}
 	kustomize build config/with-certmanager | kubectl apply -f -
 
 # Undeploy controller from the configured Kubernetes cluster in ~/.kube/config
 undeploy-with-certmanager: manifests
 	kustomize build config/with-certmanager | kubectl delete -f -
+	kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/${CERTMANAGER_VERSION}/cert-manager.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: set-permissions controller-gen
