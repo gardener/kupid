@@ -273,6 +273,7 @@ func (w *Webhook) Handle(ctx context.Context, req admission.Request) admission.R
 	if len(res.Patches) > 0 {
 		l.V(1).Info("Mutated response", "res", res)
 		l.Info("Mutated request")
+		// TODO: log req.Object and res.Object, or just the delta
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeAllowed}).Inc()
 		kupidRequestsTotal.With(prometheus.Labels{labelType: typeMutated}).Inc()
 	}

@@ -199,7 +199,7 @@ func defaultMergeNodeAffinity(s *corev1.NodeAffinity, mutable *corev1.Affinity) 
 	if t.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 		t.RequiredDuringSchedulingIgnoredDuringExecution = s.RequiredDuringSchedulingIgnoredDuringExecution
 	} else if s.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		mergeUniqueNodeSelectorTerms(s.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, &(t.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms))
+		t.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = mergeUniqueNodeSelectorTerms(s.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, t.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
 	}
 }
 
@@ -223,24 +223,58 @@ func mergeUniquePreferredSchedulingTerms(s []corev1.PreferredSchedulingTerm, mut
 	}
 }
 
-func mergeUniqueNodeSelectorTerms(s []corev1.NodeSelectorTerm, mutable *[]corev1.NodeSelectorTerm) {
-	var exists = func(n *corev1.NodeSelectorTerm) bool {
-		var slice = *mutable
-		for i := range slice {
-			var in = &slice[i]
-			if reflect.DeepEqual(n, in) {
+func mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs []corev1.NodeSelectorTerm) []corev1.NodeSelectorTerm {
+	if podNSTs == nil || len(podNSTs) == 0 {
+		return policyNSTs
+	}
+	if policyNSTs == nil || len(policyNSTs) == 0 {
+		return podNSTs
+	}
+
+	mergedPodNSTs := make([]corev1.NodeSelectorTerm, 0, len(policyNSTs)*len(podNSTs))
+	for _, podNST := range podNSTs {
+		mergedPodNSTs = append(mergedPodNSTs, createPodNSTCartesianProduct(podNST, policyNSTs)...)
+	}
+	return mergedPodNSTs
+}
+
+// createPodNSTCartesianProduct returns a cartesian product of a single pod NST with all policy NSTs
+func createPodNSTCartesianProduct(podNST corev1.NodeSelectorTerm, policyNSTs []corev1.NodeSelectorTerm) []corev1.NodeSelectorTerm {
+	mergedNSTs := make([]corev1.NodeSelectorTerm, 0, len(policyNSTs))
+	for _, policyNST := range policyNSTs {
+		var mergedNST corev1.NodeSelectorTerm
+		mergedNST.MatchExpressions = mergeNSRs(podNST.MatchExpressions, policyNST.MatchExpressions)
+		mergedNST.MatchFields = mergeNSRs(podNST.MatchFields, policyNST.MatchFields)
+		mergedNSTs = append(mergedNSTs, mergedNST)
+	}
+	return mergedNSTs
+}
+
+func mergeNSRs(podNSRs, policyNSRs []corev1.NodeSelectorRequirement) []corev1.NodeSelectorRequirement {
+	mergedNSRs := make([]corev1.NodeSelectorRequirement, len(policyNSRs))
+	copy(mergedNSRs, policyNSRs)
+
+	// contains checks if podNSR is contained in policyNSRs
+	var contains = func(policyNSRs []corev1.NodeSelectorRequirement, podNSR corev1.NodeSelectorRequirement) bool {
+		for _, policyNSR := range policyNSRs {
+			if reflect.DeepEqual(policyNSR, podNSR) {
 				return true
 			}
 		}
 		return false
 	}
 
-	for i := range s {
-		var in = &s[i]
-		if !exists(in) {
-			*mutable = append(*mutable, *in)
+	for _, podNSR := range podNSRs {
+		if !contains(policyNSRs, podNSR) {
+			mergedNSRs = append(mergedNSRs, podNSR)
 		}
 	}
+
+	if len(mergedNSRs) == 0 {
+		return nil
+	}
+
+	return mergedNSRs
 }
 
 func defaultInjectPodAffinity(s *corev1.PodAffinity, mutable *corev1.Affinity) {
