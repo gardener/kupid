@@ -41,6 +41,9 @@ spec:
 {{- if .Values.logging.level }}
         - --v={{ .Values.logging.level }}
 {{- end }}
+{{- if .Values.enableLeaderElection }}
+        - --enable-leader-election={{ .Values.enableLeaderElection }}
+{{- end }}
         env:
         - name: WEBHOOK_CONFIG_NAMESPACE
           valueFrom:

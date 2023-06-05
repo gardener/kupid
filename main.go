@@ -18,6 +18,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"os"
 	"time"
 
@@ -72,6 +73,7 @@ const (
 	flagSyncPeriod            = "sync-period"
 	flagQPS                   = "qps"
 	flagBurst                 = "burst"
+	flagEnableLeaderElection  = "enable-leader-election"
 	envNamespace              = "WEBHOOK_CONFIG_NAMESPACE"
 
 	defaultWebhookPort           = 9443
@@ -80,6 +82,7 @@ const (
 	defaultMetricsAddr           = ":8081"
 	defaultHealthzAddr           = ":8080"
 	defaultSyncPeriod            = 1 * time.Hour
+	defaultEnableLeaderElection  = true
 )
 
 func init() {
@@ -104,6 +107,7 @@ func main() {
 		syncPeriod            time.Duration
 		qps                   float64
 		burst                 int
+		enableLeaderElection  bool
 		namespace             string
 		logLevel              = uberzap.LevelFlag("v", zapcore.InfoLevel, "Logging level")
 	)
@@ -118,6 +122,7 @@ func main() {
 	flag.DurationVar(&syncPeriod, flagSyncPeriod, defaultSyncPeriod, "SyncPeriod determines the minimum frequency at which watched resources are reconciled. A lower period will correct entropy more quickly, but reduce responsiveness to change if there are many watched resources. Change this value only if you know what you are doing.")
 	flag.Float64Var(&qps, flagQPS, float64(rest.DefaultQPS), "Throttling QPS configuration for the client to host apiserver.")
 	flag.IntVar(&burst, flagBurst, rest.DefaultBurst, "Throttling burst configuration for the client to host apiserver.")
+	flag.BoolVar(&enableLeaderElection, flagEnableLeaderElection, defaultEnableLeaderElection, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager at any given time.")
 
 	flag.Parse()
 
@@ -150,11 +155,14 @@ func main() {
 	config.Burst = burst
 
 	mgr, err := ctrl.NewManager(config, ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   webhookPort,
-		HealthProbeBindAddress: healthzAddr,
-		SyncPeriod:             &syncPeriod,
+		Scheme:                     scheme,
+		MetricsBindAddress:         metricsAddr,
+		Port:                       webhookPort,
+		HealthProbeBindAddress:     healthzAddr,
+		SyncPeriod:                 &syncPeriod,
+		LeaderElection:             enableLeaderElection,
+		LeaderElectionID:           "kupid-leader-election",
+		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
