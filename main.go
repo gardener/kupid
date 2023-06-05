@@ -133,7 +133,7 @@ func main() {
 	}
 
 	level := uberzap.NewAtomicLevelAt(*logLevel)
-	ctrl.SetLogger(zap.New(zap.Level(&level)))
+	ctrl.SetLogger(zap.New(buildLoggerOpts(level)...))
 
 	namespace = os.Getenv(envNamespace)
 
@@ -375,4 +375,15 @@ func getClient(mgr manager.Manager) (client.Client, error) {
 	}
 
 	return client.New(mgr.GetConfig(), client.Options{Scheme: s})
+}
+
+func buildLoggerOpts(level uberzap.AtomicLevel) []zap.Opts {
+	var opts []zap.Opts
+	opts = append(opts, zap.UseDevMode(false))
+	opts = append(opts, zap.JSONEncoder(func(encoderConfig *zapcore.EncoderConfig) {
+		encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoderConfig.EncodeDuration = zapcore.StringDurationEncoder
+	}))
+	opts = append(opts, zap.Level(&level))
+	return opts
 }
