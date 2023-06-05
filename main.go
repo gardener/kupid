@@ -306,7 +306,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClient
 	var (
 		equivalent = admissionregistrationv1.Equivalent
 		none       = admissionregistrationv1.SideEffectClassNone
-		ifNeeded   = admissionregistrationv1.IfNeededReinvocationPolicy
+		never      = admissionregistrationv1.NeverReinvocationPolicy
 	)
 
 	obj := &admissionregistrationv1.MutatingWebhookConfiguration{
@@ -358,7 +358,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClient
 				MatchPolicy:        &equivalent,
 				SideEffects:        &none,
 				TimeoutSeconds:     &timeoutSeconds,
-				ReinvocationPolicy: &ifNeeded,
+				ReinvocationPolicy: &never,
 				AdmissionReviewVersions: []string{
 					"v1",
 				},
