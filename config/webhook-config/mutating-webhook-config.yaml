@@ -61,4 +61,4 @@ webhooks:
     resources:
     - cronjobs
   sideEffects: None
-  timeoutSeconds: 30
+  timeoutSeconds: 15

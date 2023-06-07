@@ -78,7 +78,7 @@ const (
 	envNamespace              = "WEBHOOK_CONFIG_NAMESPACE"
 
 	defaultWebhookPort           = 9443
-	defaultWebhookTimeoutSeconds = 30
+	defaultWebhookTimeoutSeconds = 15
 	defaultWebhookFailurePolicy  = string(admissionregistrationv1.Ignore)
 	defaultMetricsAddr           = ":8081"
 	defaultHealthzAddr           = ":8080"

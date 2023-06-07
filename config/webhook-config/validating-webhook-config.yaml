@@ -25,4 +25,4 @@ webhooks:
     - clusterpodschedulingpolicies
     - podschedulingpolicies
   sideEffects: None
-  timeoutSeconds: 30
+  timeoutSeconds: 15
