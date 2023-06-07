@@ -15,6 +15,7 @@
 package webhook
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gardener/kupid/pkg/common"
@@ -253,6 +254,7 @@ func createPodNSTCartesianProduct(podNST corev1.NodeSelectorTerm, policyNSTs []c
 func mergeNSRs(podNSRs, policyNSRs []corev1.NodeSelectorRequirement) []corev1.NodeSelectorRequirement {
 	mergedNSRs := make([]corev1.NodeSelectorRequirement, len(policyNSRs))
 	copy(mergedNSRs, policyNSRs)
+	fmt.Printf("(mergeNSRs) Initial mergedNSRs: %v\n", mergedNSRs)
 
 	// contains checks if podNSR is contained in policyNSRs
 	var contains = func(policyNSRs []corev1.NodeSelectorRequirement, podNSR corev1.NodeSelectorRequirement) bool {
@@ -265,7 +267,8 @@ func mergeNSRs(podNSRs, policyNSRs []corev1.NodeSelectorRequirement) []corev1.No
 	}
 
 	for _, podNSR := range podNSRs {
-		if !contains(policyNSRs, podNSR) {
+		if !contains(policyNSRs, podNSR) && !contains(mergedNSRs, podNSR) {
+			fmt.Printf("(mergeNSRs) podNSR %v is not contained in policyNSRs: %v and existing mergedNSRs: %v\n", podNSR, policyNSRs, mergedNSRs)
 			mergedNSRs = append(mergedNSRs, podNSR)
 		}
 	}
@@ -274,6 +277,7 @@ func mergeNSRs(podNSRs, policyNSRs []corev1.NodeSelectorRequirement) []corev1.No
 		return nil
 	}
 
+	fmt.Printf("(mergeNSRs) final mergedNSRs: %v\n", mergedNSRs)
 	return mergedNSRs
 }
 
