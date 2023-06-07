@@ -15,13 +15,15 @@
 package webhook
 
 import (
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var testLog = logr.Discard()
 
 // describeDefaultInjection describes the common pattern that the tests are described for default injection functions.
 func describeDefaultInjection(
@@ -237,7 +239,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			},
 			func(newValue interface{}, orig, mutable *corev1.PodSpec) {
 				Expect(newValue).To(BeAssignableToTypeOf(&corev1.Affinity{}))
-				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable)
+				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable, testLog)
 			},
 			func(mutable, mutableBefore *corev1.PodSpec) {
 				mutable.Affinity = mutableBefore.Affinity
@@ -349,7 +351,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			},
 			func(newValue interface{}, orig, mutable *corev1.PodSpec) {
 				Expect(newValue).To(BeAssignableToTypeOf(&corev1.Affinity{}))
-				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable)
+				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable, testLog)
 			},
 			func(mutable, mutableBefore *corev1.PodSpec) {
 				mutable.Affinity = mutableBefore.Affinity
@@ -448,7 +450,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			},
 			func(newValue interface{}, orig, mutable *corev1.PodSpec) {
 				Expect(newValue).To(BeAssignableToTypeOf(&corev1.Affinity{}))
-				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable)
+				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable, testLog)
 			},
 			func(mutable, mutableBefore *corev1.PodSpec) {
 				mutable.Affinity = mutableBefore.Affinity
@@ -662,19 +664,19 @@ var _ = Describe("Cartesian product of nodeSelectorTerms between pod spec and po
 	Context("podNSTs is empty, policyNSTs is empty", func() {
 		It("should return empty NST slice", func() {
 			expectedNSTSlice = []corev1.NodeSelectorTerm{}
-			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs)).To(Equal(expectedNSTSlice))
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
 		})
 	})
 
 	Context("podNSTs is empty, policyNSTs is non-empty", func() {
 		It("should return policyNSTs", func() {
-			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs)).To(Equal(policyNSTs))
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(policyNSTs))
 		})
 	})
 
 	Context("podNSTs is non-empty, policyNSTs is empty", func() {
 		It("should return podNSTs", func() {
-			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs)).To(Equal(podNSTs))
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(podNSTs))
 		})
 	})
 
@@ -744,21 +746,21 @@ var _ = Describe("Cartesian product of nodeSelectorTerms between pod spec and po
 					},
 				},
 			}
-			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs)).To(Equal(expectedNSTSlice))
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
 		})
 	})
 
 	Context("podNST is empty, policyNST is empty", func() {
 		It("should return empty NST slice", func() {
 			expectedNSTSlice = []corev1.NodeSelectorTerm{}
-			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs)).To(Equal(expectedNSTSlice))
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
 		})
 	})
 
 	Context("podNST is empty, policyNST is empty", func() {
 		It("should return empty NST slice", func() {
 			expectedNSTSlice = []corev1.NodeSelectorTerm{}
-			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs)).To(Equal(expectedNSTSlice))
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
 		})
 	})
 })

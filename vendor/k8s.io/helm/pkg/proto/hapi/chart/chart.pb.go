@@ -19,8 +19,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-// 	Chart is a helm package that contains metadata, a default config, zero or more
-// 	optionally parameterizable templates, and zero or more charts (dependencies).
+// Chart is a helm package that contains metadata, a default config, zero or more
+// optionally parameterizable templates, and zero or more charts (dependencies).
 type Chart struct {
 	// Contents of the Chartfile.
 	Metadata *Metadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
