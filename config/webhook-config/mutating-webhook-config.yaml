@@ -19,7 +19,7 @@ webhooks:
     - key: role
       operator: NotIn
       values: [ "kube-system" ] 
-  reinvocationPolicy: Never
+  reinvocationPolicy: IfNeeded
   rules:
   - apiGroups:
     - ""

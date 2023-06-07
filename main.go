@@ -18,9 +18,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"os"
 	"time"
+
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	uberzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -306,7 +307,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClient
 	var (
 		equivalent = admissionregistrationv1.Equivalent
 		none       = admissionregistrationv1.SideEffectClassNone
-		never      = admissionregistrationv1.NeverReinvocationPolicy
+		ifNeeded   = admissionregistrationv1.IfNeededReinvocationPolicy
 	)
 
 	obj := &admissionregistrationv1.MutatingWebhookConfiguration{
@@ -358,7 +359,7 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClient
 				MatchPolicy:        &equivalent,
 				SideEffects:        &none,
 				TimeoutSeconds:     &timeoutSeconds,
-				ReinvocationPolicy: &never,
+				ReinvocationPolicy: &ifNeeded,
 				AdmissionReviewVersions: []string{
 					"v1",
 				},

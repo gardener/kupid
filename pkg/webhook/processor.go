@@ -140,7 +140,7 @@ func (p *podSpecProcessorImpl) process(ctx context.Context, cacheReader, directR
 		return false, nil
 	}
 
-	if err := p.injectSchedulingPolicies(spcs, podSpec); err != nil {
+	if err := p.injectSchedulingPolicies(spcs, podSpec, l); err != nil {
 		return false, err
 	}
 
@@ -240,13 +240,13 @@ func (p *podSpecProcessorImpl) filterSchedulingPolicies(sps []kupidv1alpha1.PodS
 	return filtered, nil
 }
 
-func (p *podSpecProcessorImpl) injectSchedulingPolicies(spcs []common.PodSchedulingPolicyConfiguration, podSpec *corev1.PodSpec) error {
+func (p *podSpecProcessorImpl) injectSchedulingPolicies(spcs []common.PodSchedulingPolicyConfiguration, podSpec *corev1.PodSpec, log logr.Logger) error {
 	if p.injector == nil {
 		return fmt.Errorf("schedulingPolicyInjector should be injected before handling any requests")
 	}
 	orig := podSpec.DeepCopy()
 	for _, spc := range spcs {
-		p.injector.injectPodSchedulingPolicyConfiguration(spc, orig, podSpec)
+		p.injector.injectPodSchedulingPolicyConfiguration(spc, orig, podSpec, log)
 	}
 	return nil
 }
