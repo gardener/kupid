@@ -15,13 +15,15 @@
 package webhook
 
 import (
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var testLog = logr.Discard()
 
 // describeDefaultInjection describes the common pattern that the tests are described for default injection functions.
 func describeDefaultInjection(
@@ -179,6 +181,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 				},
 			},
 		}
+
 		var _ = describeDefaultInjection(
 			"node affinity",
 			(func() *corev1.Affinity { return nil })(),
@@ -236,7 +239,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			},
 			func(newValue interface{}, orig, mutable *corev1.PodSpec) {
 				Expect(newValue).To(BeAssignableToTypeOf(&corev1.Affinity{}))
-				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable)
+				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable, testLog)
 			},
 			func(mutable, mutableBefore *corev1.PodSpec) {
 				mutable.Affinity = mutableBefore.Affinity
@@ -258,7 +261,15 @@ var _ = Describe("defaultInjectAffinity", func() {
 					if mutableBefore.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 						mutableBefore.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = t.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
 					} else if t.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-						mutableBefore.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(mutableBefore.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, t.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms...)
+						mergedNSTs := make([]corev1.NodeSelectorTerm, 0)
+						for _, policyNST := range t.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+							for _, podNST := range mutableBefore.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+								policyNST.MatchExpressions = append(policyNST.MatchExpressions, podNST.MatchExpressions...)
+								policyNST.MatchFields = append(policyNST.MatchFields, podNST.MatchFields...)
+							}
+							mergedNSTs = append(mergedNSTs, policyNST)
+						}
+						mutableBefore.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = mergedNSTs
 					}
 				}
 				return mutableBefore
@@ -298,6 +309,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 				},
 			},
 		}
+
 		var _ = describeDefaultInjection(
 			"pod affinity",
 			(func() *corev1.Affinity { return nil })(),
@@ -339,7 +351,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			},
 			func(newValue interface{}, orig, mutable *corev1.PodSpec) {
 				Expect(newValue).To(BeAssignableToTypeOf(&corev1.Affinity{}))
-				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable)
+				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable, testLog)
 			},
 			func(mutable, mutableBefore *corev1.PodSpec) {
 				mutable.Affinity = mutableBefore.Affinity
@@ -396,6 +408,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 				},
 			},
 		}
+
 		var _ = describeDefaultInjection(
 			"pod anti-affinity",
 			(func() *corev1.Affinity { return nil })(),
@@ -437,7 +450,7 @@ var _ = Describe("defaultInjectAffinity", func() {
 			},
 			func(newValue interface{}, orig, mutable *corev1.PodSpec) {
 				Expect(newValue).To(BeAssignableToTypeOf(&corev1.Affinity{}))
-				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable)
+				defaultInjectAffinity(newValue.(*corev1.Affinity), orig, mutable, testLog)
 			},
 			func(mutable, mutableBefore *corev1.PodSpec) {
 				mutable.Affinity = mutableBefore.Affinity
@@ -604,3 +617,150 @@ var _ = (func() bool {
 	)
 	return false
 })()
+
+var _ = Describe("Cartesian product of nodeSelectorTerms between pod spec and policy", func() {
+	var (
+		podNSTs          []corev1.NodeSelectorTerm
+		policyNSTs       []corev1.NodeSelectorTerm
+		expectedNSTSlice []corev1.NodeSelectorTerm
+
+		MatchExpressionA = corev1.NodeSelectorRequirement{
+			Key:      "a",
+			Operator: "In",
+			Values:   []string{"A"},
+		}
+		MatchExpressionB = corev1.NodeSelectorRequirement{
+			Key:      "b",
+			Operator: "In",
+			Values:   []string{"B"},
+		}
+		MatchExpressionC = corev1.NodeSelectorRequirement{
+			Key:      "c",
+			Operator: "In",
+			Values:   []string{"C"},
+		}
+		MatchExpressionD = corev1.NodeSelectorRequirement{
+			Key:      "d",
+			Operator: "In",
+			Values:   []string{"D"},
+		}
+		MatchExpressionE = corev1.NodeSelectorRequirement{
+			Key:      "e",
+			Operator: "In",
+			Values:   []string{"E"},
+		}
+		MatchFieldF = corev1.NodeSelectorRequirement{
+			Key:      "metadata.name",
+			Operator: "In",
+			Values:   []string{"F"},
+		}
+	)
+
+	BeforeEach(func() {
+		podNSTs = []corev1.NodeSelectorTerm{}
+		policyNSTs = []corev1.NodeSelectorTerm{}
+	})
+
+	Context("podNSTs is empty, policyNSTs is empty", func() {
+		It("should return empty NST slice", func() {
+			expectedNSTSlice = []corev1.NodeSelectorTerm{}
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
+		})
+	})
+
+	Context("podNSTs is empty, policyNSTs is non-empty", func() {
+		It("should return policyNSTs", func() {
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(policyNSTs))
+		})
+	})
+
+	Context("podNSTs is non-empty, policyNSTs is empty", func() {
+		It("should return podNSTs", func() {
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(podNSTs))
+		})
+	})
+
+	Context("podNST is non-empty, policyNST is non-empty", func() {
+		BeforeEach(func() {
+			podNSTs = []corev1.NodeSelectorTerm{
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionA,
+						MatchExpressionB,
+					},
+				},
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionC,
+					},
+				},
+			}
+			policyNSTs = []corev1.NodeSelectorTerm{
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionD,
+					},
+				},
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionE,
+					},
+					MatchFields: []corev1.NodeSelectorRequirement{
+						MatchFieldF,
+					},
+				},
+			}
+		})
+		It("should return correct NST slice", func() {
+			expectedNSTSlice = []corev1.NodeSelectorTerm{
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionD,
+						MatchExpressionA,
+						MatchExpressionB,
+					},
+				},
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionE,
+						MatchExpressionA,
+						MatchExpressionB,
+					},
+					MatchFields: []corev1.NodeSelectorRequirement{
+						MatchFieldF,
+					},
+				},
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionD,
+						MatchExpressionC,
+					},
+				},
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						MatchExpressionE,
+						MatchExpressionC,
+					},
+					MatchFields: []corev1.NodeSelectorRequirement{
+						MatchFieldF,
+					},
+				},
+			}
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
+		})
+	})
+
+	Context("podNST is empty, policyNST is empty", func() {
+		It("should return empty NST slice", func() {
+			expectedNSTSlice = []corev1.NodeSelectorTerm{}
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
+		})
+	})
+
+	Context("podNST is empty, policyNST is empty", func() {
+		It("should return empty NST slice", func() {
+			expectedNSTSlice = []corev1.NodeSelectorTerm{}
+			Expect(mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs, testLog)).To(Equal(expectedNSTSlice))
+		})
+	})
+})

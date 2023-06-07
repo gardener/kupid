@@ -251,12 +251,13 @@ func NewRaw(opts ...Opts) *zap.Logger {
 }
 
 // BindFlags will parse the given flagset for zap option flags and set the log options accordingly
-//  zap-devel: Development Mode defaults(encoder=consoleEncoder,logLevel=Debug,stackTraceLevel=Warn)
-//			  Production Mode defaults(encoder=jsonEncoder,logLevel=Info,stackTraceLevel=Error)
-//  zap-encoder: Zap log encoding (one of 'json' or 'console')
-//  zap-log-level:  Zap Level to configure the verbosity of logging. Can be one of 'debug', 'info', 'error',
-//			       or any integer value > 0 which corresponds to custom debug levels of increasing verbosity")
-//  zap-stacktrace-level: Zap Level at and above which stacktraces are captured (one of 'info', 'error' or 'panic')
+//
+//	 zap-devel: Development Mode defaults(encoder=consoleEncoder,logLevel=Debug,stackTraceLevel=Warn)
+//				  Production Mode defaults(encoder=jsonEncoder,logLevel=Info,stackTraceLevel=Error)
+//	 zap-encoder: Zap log encoding (one of 'json' or 'console')
+//	 zap-log-level:  Zap Level to configure the verbosity of logging. Can be one of 'debug', 'info', 'error',
+//				       or any integer value > 0 which corresponds to custom debug levels of increasing verbosity")
+//	 zap-stacktrace-level: Zap Level at and above which stacktraces are captured (one of 'info', 'error' or 'panic')
 func (o *Options) BindFlags(fs *flag.FlagSet) {
 	// Set Development mode value
 	fs.BoolVar(&o.Development, "zap-devel", o.Development,
@@ -296,10 +297,11 @@ func (o *Options) BindFlags(fs *flag.FlagSet) {
 }
 
 // UseFlagOptions configures the logger to use the Options set by parsing zap option flags from the CLI.
-//  opts := zap.Options{}
-//  opts.BindFlags(flag.CommandLine)
-//  flag.Parse()
-//  log := zap.New(zap.UseFlagOptions(&opts))
+//
+//	opts := zap.Options{}
+//	opts.BindFlags(flag.CommandLine)
+//	flag.Parse()
+//	log := zap.New(zap.UseFlagOptions(&opts))
 func UseFlagOptions(in *Options) Opts {
 	return func(o *Options) {
 		*o = *in

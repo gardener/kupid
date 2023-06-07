@@ -9,4 +9,4 @@ kind: Kustomization
 images:
 - name: webhook
   newName: eu.gcr.io/gardener-project/gardener/kupid
-  newTag: v0.1.0-dev
+  newTag: v0.6.0-dev

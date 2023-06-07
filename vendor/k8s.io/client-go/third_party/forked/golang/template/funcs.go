@@ -1,6 +1,6 @@
-//This package is copied from Go library text/template.
-//The original private functions eq, ge, gt, le, lt, and ne
-//are exported as public functions.
+// This package is copied from Go library text/template.
+// The original private functions eq, ge, gt, le, lt, and ne
+// are exported as public functions.
 package template
 
 import (
@@ -575,7 +575,9 @@ func URLQueryEscaper(args ...interface{}) string {
 }
 
 // evalArgs formats the list of arguments into a string. It is therefore equivalent to
+//
 //	fmt.Sprint(args...)
+//
 // except that each argument is indirected (if a pointer), as required,
 // using the same rules as the default string evaluation during template
 // execution.

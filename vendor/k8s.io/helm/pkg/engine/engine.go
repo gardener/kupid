@@ -65,12 +65,12 @@ func New() *Engine {
 //
 // Known late-bound functions:
 //
-//	- "include": This is late-bound in Engine.Render(). The version
-//	   included in the FuncMap is a placeholder.
-//      - "required": This is late-bound in Engine.Render(). The version
-//	   included in the FuncMap is a placeholder.
-//      - "tpl": This is late-bound in Engine.Render(). The version
-//	   included in the FuncMap is a placeholder.
+//   - "include": This is late-bound in Engine.Render(). The version
+//     included in the FuncMap is a placeholder.
+//   - "required": This is late-bound in Engine.Render(). The version
+//     included in the FuncMap is a placeholder.
+//   - "tpl": This is late-bound in Engine.Render(). The version
+//     included in the FuncMap is a placeholder.
 func FuncMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
 	delete(f, "env")
