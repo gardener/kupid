@@ -1,7 +1,7 @@
 VERSION             := $(shell cat VERSION)
-REGISTRY            := eu.gcr.io/gardener-project/gardener
+REGISTRY            := europe-docker.pkg.dev/gardener-project/public
 
-IMAGE_REPOSITORY    := $(REGISTRY)/kupid
+IMAGE_REPOSITORY    := $(REGISTRY)/gardener/kupid
 IMAGE_TAG           := $(VERSION)
 REPO_ROOT           := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 

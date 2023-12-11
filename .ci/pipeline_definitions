@@ -5,10 +5,12 @@ kupid:
         preprocess:
           'inject-commit-hash'
         inject_effective_version: true
+      component_descriptor:
+        ocm_repository: europe-docker.pkg.dev/gardener-project/snapshots
       publish:
         dockerimages:
           kupid:
-            image: 'eu.gcr.io/gardener-project/gardener/kupid'
+            image: europe-docker.pkg.dev/gardener-project/snapshots/gardener/kupid
             dockerfile: 'Dockerfile'
             inputs:
               repos:
@@ -27,7 +29,9 @@ kupid:
   jobs:
     head-update:
       traits:
-        component_descriptor: ~
+        component_descriptor:
+          ocm_repository_mappings:
+            - repository: europe-docker.pkg.dev/gardener-project/releases
         draft_release: ~
     pull-request:
       traits:
@@ -36,7 +40,12 @@ kupid:
       traits:
         version:
           preprocess: 'finalize'
-        component_descriptor: ~
+        component_descriptor:
+          ocm_repository: europe-docker.pkg.dev/gardener-project/releases
+        publish:
+          dockerimages:
+            kupid:
+              image: europe-docker.pkg.dev/gardener-project/releases/gardener/kupid
         release:
           nextversion: 'bump_minor'
         slack:

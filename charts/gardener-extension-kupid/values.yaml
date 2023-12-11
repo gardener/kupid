@@ -1,5 +1,5 @@
 image:
-  repository: eu.gcr.io/gardener-project/gardener/kupid
+  repository: europe-docker.pkg.dev/gardener-project/public/gardener/kupid
   tag: latest
   pullPolicy: IfNotPresent
 
