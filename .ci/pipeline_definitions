@@ -1,17 +1,16 @@
 kupid:
-  template: 'default'
   base_definition:
-    repo: ~
     traits:
       version:
         preprocess:
           'inject-commit-hash'
         inject_effective_version: true
+      component_descriptor:
+        ocm_repository: europe-docker.pkg.dev/gardener-project/snapshots
       publish:
         dockerimages:
           kupid:
-            registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/kupid'
+            image: europe-docker.pkg.dev/gardener-project/snapshots/gardener/kupid
             dockerfile: 'Dockerfile'
             inputs:
               repos:
@@ -30,7 +29,9 @@ kupid:
   jobs:
     head-update:
       traits:
-        component_descriptor: ~
+        component_descriptor:
+          ocm_repository_mappings:
+            - repository: europe-docker.pkg.dev/gardener-project/releases
         draft_release: ~
     pull-request:
       traits:
@@ -39,6 +40,12 @@ kupid:
       traits:
         version:
           preprocess: 'finalize'
+        component_descriptor:
+          ocm_repository: europe-docker.pkg.dev/gardener-project/releases
+        publish:
+          dockerimages:
+            kupid:
+              image: europe-docker.pkg.dev/gardener-project/releases/gardener/kupid
         release:
           nextversion: 'bump_minor'
         slack:
@@ -47,4 +54,3 @@ kupid:
             internal_scp_workspace:
               channel_name: 'C017KSLTF4H' # gardener-autoscaling
               slack_cfg_name: 'scp_workspace'
-        component_descriptor: ~
