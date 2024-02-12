@@ -24,6 +24,10 @@ vpa:
   updatePolicy:
     updateMode: "Auto"
 
+manager:
+  qps: 5.0
+  burst: 10
+
 webhookConfig:
   serverPort: 9443
   timeoutSeconds: 15

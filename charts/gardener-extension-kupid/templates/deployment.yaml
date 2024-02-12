@@ -34,6 +34,12 @@ spec:
         - --webhook-port={{ .Values.webhookConfig.serverPort }}
         - --register-webhooks=true
         - --webhook-timeout-seconds={{ .Values.webhookConfig.timeoutSeconds }}
+{{- if (.Values.manager).qps }}
+        - --qps={{ .Values.manager.qps }}
+{{- end }}
+{{- if (.Values.manager).burst }}
+        - --burst={{ .Values.manager.burst }}
+{{- end }}
 {{- if .Values.webhookConfig.failurePolicy }}
         - --webhook-failure-policy={{ .Values.webhookConfig.failurePolicy }}
 {{- end }}
