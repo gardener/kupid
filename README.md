@@ -3,44 +3,45 @@
 Inject scheduling criteria into target pods orthogonally by policy definition.
 
 ## Content
+
 - [kupid](#kupid)
-   - [Content](#content)
-   - [Goals](#goals)
-   - [Non-goals](#non-goals)
-   - [Development Installation](#development-installation)
-      - [Building the docker image](#building-the-docker-image)
-      - [Deploying kupid](#deploying-kupid)
-         - [Pre-requisites](#pre-requisites)
-         - [Using self-generated certificates](#using-self-generated-certificates)
-         - [Using cert-manager](#using-cert-manager)
-   - [Context](#context)
-      - [affinity](#affinity)
-         - [nodeAffinity](#nodeaffinity)
-         - [podAffinity](#podaffinity)
-         - [podAntiAffinity](#podantiaffinity)
-      - [nodeName](#nodename)
-      - [nodeSelector](#nodeselector)
-      - [schedulerName](#schedulername)
-      - [tolerations](#tolerations)
-   - [Problem](#problem)
-   - [Solution](#solution)
-      - [Sequence Diagram](#sequence-diagram)
-      - [PodSchedulingPolicy](#podschedulingpolicy)
-      - [ClusterPodSchedulingPolicy](#clusterpodschedulingpolicy)
-      - [Support for top-down pod scheduling criteria](#support-for-top-down-pod-scheduling-criteria)
-      - [Gardener Integration Sequence Diagram](#gardener-integration-sequence-diagram)
-      - [Pros](#pros)
-      - [Cons](#cons)
-      - [Mutating higher-order controllers](#mutating-higher-order-controllers)
-         - [Sequence Diagram](#sequence-diagram-1)
-         - [Gardener Integration Sequence Diagram](#gardener-integration-sequence-diagram-1)
-   - [Alternatives](#alternatives)
-      - [Propagate flexibility up the chain](#propagate-flexibility-up-the-chain)
-      - [Make assumptions](#make-assumptions)
-   - [Prior Art](#prior-art)
-      - [PodPreset](#podpreset)
-      - [Banzai Cloud Spot Config Webhook](#banzai-cloud-spot-config-webhook)
-      - [OPA Gatekeeper](#opa-gatekeeper)
+  - [Content](#content)
+  - [Goals](#goals)
+  - [Non-goals](#non-goals)
+  - [Development Installation](#development-installation)
+    - [Building the docker image](#building-the-docker-image)
+    - [Deploying kupid](#deploying-kupid)
+      - [Pre-requisites](#pre-requisites)
+      - [Using self-generated certificates](#using-self-generated-certificates)
+      - [Using cert-manager](#using-cert-manager)
+  - [Context](#context)
+    - [affinity](#affinity)
+      - [nodeAffinity](#nodeaffinity)
+      - [podAffinity](#podaffinity)
+      - [podAntiAffinity](#podantiaffinity)
+    - [nodeName](#nodename)
+    - [nodeSelector](#nodeselector)
+    - [schedulerName](#schedulername)
+    - [tolerations](#tolerations)
+  - [Problem](#problem)
+  - [Solution](#solution)
+    - [Sequence Diagram](#sequence-diagram)
+    - [PodSchedulingPolicy](#podschedulingpolicy)
+    - [ClusterPodSchedulingPolicy](#clusterpodschedulingpolicy)
+    - [Support for top-down pod scheduling criteria](#support-for-top-down-pod-scheduling-criteria)
+    - [Gardener Integration Sequence Diagram](#gardener-integration-sequence-diagram)
+    - [Pros](#pros)
+    - [Cons](#cons)
+    - [Mutating higher-order controllers](#mutating-higher-order-controllers)
+      - [Sequence Diagram](#sequence-diagram-1)
+      - [Gardener Integration Sequence Diagram](#gardener-integration-sequence-diagram-1)
+  - [Alternatives](#alternatives)
+    - [Propagate flexibility up the chain](#propagate-flexibility-up-the-chain)
+    - [Make assumptions](#make-assumptions)
+  - [Prior Art](#prior-art)
+    - [PodPreset](#podpreset)
+    - [Banzai Cloud Spot Config Webhook](#banzai-cloud-spot-config-webhook)
+    - [OPA Gatekeeper](#opa-gatekeeper)
 
 ## Goals
 
@@ -61,7 +62,7 @@ This is especially relevant for supporting dedicated worker pools for shoot `etc
 
 The steps for installing kupid on a Kubernetes cluster for development and/or trial are given below.
 These are only development installation steps and not intended for any kind of production scenarios.
-For anything other than development or trial purposes, please use your favourite CI/CD toolkit.
+For anything other than development or trial purposes, please use your favorite CI/CD toolkit.
 
 ### Building the docker image
 
@@ -69,16 +70,21 @@ The following steps explain how to build a docker image for kupid from the sourc
 It is an optional step and can be skipped if the upstream docker image can be used.
 
 1. Build kupid locally. This step is optional if you are using upstream container image for kupid.
+
 ```sh
-$ make webhook
+make webhook
 ```
-2. Build kupid container image. This step is optional if you are using upstream container image for kupid.
+
+1. Build kupid container image. This step is optional if you are using upstream container image for kupid.
+
 ```sh
-$ make docker-build
+make docker-build
 ```
-3. Push the container image to the container repository. This step is optional if you are using upstream container image for kupid.
+
+1. Push the container image to the container repository. This step is optional if you are using upstream container image for kupid.
+
 ```sh
-$ make docker-push
+make docker-push
 ```
 
 ### Deploying kupid
@@ -88,7 +94,7 @@ Please follow the following steps to deploy kupid resources on the target Kubern
 #### Pre-requisites
 
 The development environment relies on [kustomize](https://github.com/kubernetes-sigs/kustomize).
-Please [install](https://github.com/kubernetes-sigs/kustomize/blob/master/docs/INSTALL.md) it in your development environment.
+Please [install](https://kubectl.docs.kubernetes.io/installation/kustomize/) it in your development environment.
 
 #### Using self-generated certificates
 
@@ -96,8 +102,9 @@ Kupid requires TLS certificates to be configures for its validating and mutating
 Kupid optionally supports generating the required TLS certificates and the default `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` automatically.
 
 Deploy the resources based on [`config/default/kustomization.yaml`](config/default/kustomization.yaml) which can be further customized (if required) before executing this step.
+
 ```sh
-$ make deploy
+make deploy
 ```
 
 #### Using cert-manager
@@ -107,13 +114,14 @@ Below is an example of doing this using [cert-manager](https://github.com/jetsta
 Please make sure the target Kubernetes cluster you want to deploy kupid to has a working [installation](https://cert-manager.io/docs/installation/kubernetes/) of cert-manager.
 
 Deploy the resources based on [`config/using-certmanager/kustomization.yaml`](config/using-certmanager/kustomization.yaml) which can be further customized (if required) before executing this step.
+
 ```sh
-$ make deploy-using-certmanager
+make deploy-using-certmanager
 ```
 
 ## Context
 
-Kubernetes API provides many mechanism for pods to influence how and where (which node) they get scheduling in/by the Kubernetes cluster.
+Kubernetes API provides many mechanisms for pods to influence how and where (which node) they get scheduling in/by the Kubernetes cluster.
 All such mechanisms involve the pods declaring things in their [`PodSpec`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podspec-v1-core).
 At present, there are five such mechanisms.
 
@@ -148,7 +156,7 @@ An example of how it can be used can be seen [here](https://raw.githubuserconten
 ### `nodeSelector`
 
 [`NodeSelector`](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector) is a simple way to constrain the viable candidate nodes for scheduling by specifying a label selector that select such viable nodes.
-An example of how it can used can be seen [here](https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/pods/pod-nginx.yaml).
+An example of how it can be used can be seen [here](https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/pods/pod-nginx.yaml).
 
 ### `schedulerName`
 
@@ -166,7 +174,7 @@ Typically, this functionality is used in combination with other ways of _attract
 
 - All the mechanisms for influencing the scheduling of pods described [above](#context) have to be specified top-down (or in other words, vertically) by the pods themselves (or any higher order component/controller/operator that deploys them).
 - Such top-down approach forces all the components up the chain to be aware of the details of these mechanisms. I.e. they either [make some assumptions](#make-assumptions) at some stage about the pod scheduling criteria or expose the flexibility of specifying such pod scheduling criteria [all the way up the chain](#propagate-flexibility-up-the-chain).
-- Specifically, in the Gardener seed cluster, some workloads like `etcd` might be better of scheduled on dedicated worker pools so that other workloads and the common nodes on which they are scheduled can be scaled up and down by the [`Cluster Autoscaler`](https://github.com/gardener/autoscaler/tree/machine-controller-manager/cluster-autoscaler) more efficiently.
+- Specifically, in the Gardener seed cluster, some workloads like `etcd` might be better off scheduled on dedicated worker pools so that other workloads and the common nodes on which they are scheduled can be scaled up and down by the [`Cluster Autoscaler`](https://github.com/gardener/autoscaler/tree/machine-controller-manager/cluster-autoscaler) more efficiently.
 This approach might be used for other workloads too for other reasons in the future (pre-emptible nodes for controller workloads?).
 - However, Gardener must not force all seed clusters to always have dedicated worker pools.
 It should be always possible to use Gardener with plain-vanilla seed clusters with no dedicated worker pools.
@@ -196,9 +204,9 @@ In addition, it allows specifying the target namespaces to which the `ClusterPod
 
 Only a pod whose namespace matches the `spec.namespaceSelector` and also matches the `spec.podSelector` will be applied the specified pod scheduling policy.
 
-An explicitly specified empty selector would match all objects (i,e. namespaces and pods respectively).
+An explicitly specified empty selector would match all objects (i.e. namespaces and pods respectively).
 
-A `nil` selector (i.e. not specified in the `spec`) will match no objects (i.e. namespaes and pods respectively).
+A `nil` selector (i.e. not specified in the `spec`) will match no objects (i.e. namespaces and pods respectively).
 
 ### Support for top-down pod scheduling criteria
 
@@ -206,9 +214,9 @@ Pods can continue to specify their scheduling criteria explicitly in a top-down 
 
 One way to make this possible is to use the `spec.namespaceSelector` and `spec.podSelector` judiciously so that the pods that specify their own scheduling criteria do not get targeted by any of the declared scheduling policies.
 
-If any additional declared [`PodSchedulingPolicy`](#podschedulingpolicy) or [`ClusterPodSchedulingPolicy`](#clusterschedulingpolicy) are applicable for such pods, then the pod scheduling criteria will be merged with the already defined scheduling criteria specified in the pod.
+If any additional declared [`PodSchedulingPolicy`](#podschedulingpolicy) or [`ClusterPodSchedulingPolicy`](#clusterpodschedulingpolicy) are applicable for such pods, then the pod scheduling criteria will be merged with the already defined scheduling criteria specified in the pod.
 
-During merging, if there is a conflict between the already existing pod scheduling criteria and the additional pod scheduling criteria that is being merged, then only the non-conflicting part of the additional pod scheduling criteria will be merged and the conflicting part will be skipped.
+During merging, if there is a conflict between the already existing pod scheduling criteria and the additional pod scheduling criteria that is being merged, then only the non-conflicting part of the additional pod scheduling criteria will be merged, and the conflicting part will be skipped.
 
 ### Gardener Integration Sequence Diagram
 
@@ -251,7 +259,7 @@ This suffers from polluting many layers with information that is not too relevan
 ### Make assumptions
 
 Make some assumptions about the pod scheduling mechanism at some level of deployment and management of the workload.
-This would not be flexible and will make it hard to change the pod scheduling behaviour.
+This would not be flexible and will make it hard to change the pod scheduling behavior.
 
 ## Prior Art
 
@@ -266,7 +274,7 @@ The [spot-config-webhook](https://github.com/banzaicloud/spot-config-webhook) li
 
 ### OPA Gatekeeper
 
-The OPA [Gatekeeper](https://github.com/open-policy-agent/gatekeeper/) allows to define policy to validate and mutate any kubernetes resource.
+The OPA [Gatekeeper](https://github.com/open-policy-agent/gatekeeper/) allows to define a policy to validate and mutate any kubernetes resource.
 Technically, this can be used to dynamically inject anything, including scheduling policy into `pods`.
 But this is too big a component to introduce just to dynamically inject scheduling policy.
 Besides, the policy definition as code is undesirable in this context because the policy itself would be non-declarative and hard to validate while deploying the policy.
