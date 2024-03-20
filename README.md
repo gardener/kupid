@@ -1,5 +1,7 @@
 # kupid
 
+[![REUSE status](https://api.reuse.software/badge/github.com/gardener/kupid)](https://api.reuse.software/info/github.com/gardener/kupid)
+
 Inject scheduling criteria into target pods orthogonally by policy definition.
 
 ## Content
