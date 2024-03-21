@@ -18,8 +18,7 @@
 // The validateAffinity function copied from k8s.io/kubernetes/pkg/apis/core/validation/validation.go
 // has been renamed to ValidateAffinity to be able to be accessed from common/webhook package.
 //
-// Modifications are under
-// Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file.
+// Modifications Copyright SAP SE or an SAP affiliate company and Gardener contributors
 
 package common
 
