@@ -33,8 +33,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
+
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
 	"github.com/gardener/kupid/pkg/webhook"
+	kupidWebhook "github.com/gardener/kupid/pkg/webhook"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 )
 
@@ -194,10 +196,9 @@ func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutS
 	}
 
 	ctx := context.TODO()
-
 	setupLog.Info("Registering TLS certificates if necessary.")
 
-	caBundle, err := extensionswebhook.GenerateCertificates(
+	caBundle, err := kupidWebhook.GenerateCertificates(
 		ctx,
 		mgr,
 		certDir,
@@ -209,7 +210,6 @@ func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutS
 	if err != nil {
 		return err
 	}
-
 	clientConfig := buildWebhookClientConfig(namespace, caBundle)
 
 	setupLog.Info("Registering webhooks if necessary.")
