@@ -36,7 +36,7 @@ import (
 
 	kupidv1alpha1 "github.com/gardener/kupid/api/v1alpha1"
 	"github.com/gardener/kupid/pkg/webhook"
-	kupidWebhook "github.com/gardener/kupid/pkg/webhook"
+	kupidwebhook "github.com/gardener/kupid/pkg/webhook"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 )
 
@@ -198,7 +198,7 @@ func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutS
 	ctx := context.TODO()
 	setupLog.Info("Registering TLS certificates if necessary.")
 
-	caBundle, err := kupidWebhook.GenerateCertificates(
+	caBundle, err := kupidwebhook.GenerateCertificates(
 		ctx,
 		mgr,
 		certDir,

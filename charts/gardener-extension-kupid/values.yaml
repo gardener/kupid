@@ -44,6 +44,9 @@ enableLeaderElection: true
 #     podLabels:
 #       app: etcd-statefulset
 #       role: main
+#     podExpressions:
+#     - key: networking.resources.gardener.cloud/to-etcd-main-client-tcp-2379
+#       operator: DoesNotExist
 #     nodeLabels:
 #       pool.worker.gardener.cloud/dedicated-for: etcd
 #     tolerations:
