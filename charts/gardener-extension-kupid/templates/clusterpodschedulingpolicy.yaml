@@ -20,6 +20,10 @@ spec:
   podSelector:
     matchLabels:
 {{ toYaml $policy.podLabels | indent 6 }}
+  {{- if $policy.podExpressions }}
+    matchExpressions:
+{{ toYaml $policy.podExpressions | indent 6}}
+  {{- end }}
   {{- else }}
   podSelector: {}
   {{- end }}

@@ -270,6 +270,10 @@ type ShootCareControllerConfiguration struct {
 	StaleExtensionHealthChecks *StaleExtensionHealthChecks
 	// ConditionThresholds defines the condition threshold per condition type.
 	ConditionThresholds []ConditionThreshold
+	// WebhookRemediatorEnabled specifies whether the remediator for webhooks not following the Kubernetes best
+	// practices (https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#best-practices-and-warnings)
+	// is enabled.
+	WebhookRemediatorEnabled *bool
 }
 
 // SeedCareControllerConfiguration defines the configuration of the SeedCare
@@ -382,6 +386,14 @@ type FluentBit struct {
 	// OutputSection defines [OUTPUT] configuration for the fluent-bit.
 	// If it is nil, fluent-bit uses default output configuration.
 	OutputSection *string
+	// NetworkPolicy defines settings for the fluent-bit NetworkPolicy.
+	NetworkPolicy *FluentBitNetworkPolicy
+}
+
+// FluentBitNetworkPolicy defines settings for the fluent-bit NetworkPolicy.
+type FluentBitNetworkPolicy struct {
+	// AdditionalEgressIPBlocks contains IP CIDRs for the egress network policy.
+	AdditionalEgressIPBlocks []string
 }
 
 // Loki contains configuration for the Loki.
