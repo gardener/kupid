@@ -95,7 +95,7 @@ func main() {
 		healthzAddr           string
 		certDir               string
 		registerWebhooks      bool
-		webhookTimeoutSeconds int
+		webhookTimeoutSeconds int32
 		webhookFailurePolicy  string
 		syncPeriod            time.Duration
 		qps                   float64

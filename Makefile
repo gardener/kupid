@@ -134,3 +134,13 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
+.PHONY: sast
+sast: $(GOSEC)
+        @chmod +xw hack/sast.sh
+		@./hack/sast.sh
+
+.PHONY: sast-report
+sast-report: $(GOSEC)
+       @chmod +xw hack/sast.sh
+	   @./hack/sast.sh --gosec-report true
