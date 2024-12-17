@@ -22,6 +22,8 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+include hack/tools.mk
+
 set-permissions:
 	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
 
@@ -137,10 +139,8 @@ endif
 
 .PHONY: sast
 sast: $(GOSEC)
-	@chmod +xw hack/sast.sh
 	@./hack/sast.sh
 
 .PHONY: sast-report
 sast-report: $(GOSEC)
-	@chmod +xw hack/sast.sh
 	@./hack/sast.sh --gosec-report true
