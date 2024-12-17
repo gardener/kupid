@@ -95,7 +95,7 @@ func main() {
 		healthzAddr           string
 		certDir               string
 		registerWebhooks      bool
-		webhookTimeoutSeconds int32
+		webhookTimeoutSeconds int
 		webhookFailurePolicy  string
 		syncPeriod            time.Duration
 		qps                   float64
@@ -169,6 +169,7 @@ func main() {
 	}()
 
 	if registerWebhooks {
+		//#nosec G115 webhookTimeoutSeconds is controlled via spec and is not exposed for manipulation directly and is defaulted to 15 seconds
 		if err := doRegisterWebhooks(mgr, certDir, namespace, int32(webhookTimeoutSeconds), admissionregistrationv1.FailurePolicyType(webhookFailurePolicy)); err != nil {
 			setupLog.Error(err, "Error registering webhooks. Aborting startup...")
 			os.Exit(1)

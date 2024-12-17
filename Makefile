@@ -137,10 +137,10 @@ endif
 
 .PHONY: sast
 sast: $(GOSEC)
-        @chmod +xw hack/sast.sh
-		@./hack/sast.sh
+	@chmod +xw hack/sast.sh
+	@./hack/sast.sh
 
 .PHONY: sast-report
 sast-report: $(GOSEC)
-       @chmod +xw hack/sast.sh
-	   @./hack/sast.sh --gosec-report true
+	@chmod +xw hack/sast.sh
+	@./hack/sast.sh --gosec-report true
