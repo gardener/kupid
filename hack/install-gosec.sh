@@ -9,6 +9,9 @@ set -e
 echo "> Installing gosec"
 
 TOOLS_BIN_DIR=${TOOLS_BIN_DIR:-$(dirname $0)/bin}
+if [[ ! -d $TOOLS_BIN_DIR ]]; then
+  mkdir -p $TOOLS_BIN_DIR
+fi
 
 platform=$(uname -s | tr '[:upper:]' '[:lower:]')
 version=$GOSEC_VERSION
