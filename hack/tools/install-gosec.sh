@@ -25,7 +25,7 @@ case $(uname -m) in
     ;;
   *)
     echo "Unknown architecture"
-    exit -1
+    exit 1
     ;;
 esac
 
@@ -39,7 +39,6 @@ function cleanup {
 trap cleanup EXIT ERR INT TERM
 echo "Downloading from: https://github.com/securego/gosec/releases/download/${version}/${file_name}"
 curl -L -o ${temp_dir}/${file_name} "https://github.com/securego/gosec/releases/download/${version}/${file_name}"
-
 
 tar -xzm -C "${temp_dir}" -f "${temp_dir}/${file_name}"
 mv "${temp_dir}/gosec" $TOOLS_BIN_DIR

@@ -44,6 +44,14 @@ verify: check test
 check:
 	@.ci/check
 
+.PHONY: sast
+sast: $(GOSEC)
+	@./hack/sast.sh
+
+.PHONY: sast-report
+sast-report: $(GOSEC)
+	@./hack/sast.sh --gosec-report true
+
 # Run tests
 test: generate fmt vet manifests
 	@.ci/test
@@ -136,11 +144,3 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
-
-.PHONY: sast
-sast: $(GOSEC)
-	@./hack/sast.sh
-
-.PHONY: sast-report
-sast-report: $(GOSEC)
-	@./hack/sast.sh --gosec-report true

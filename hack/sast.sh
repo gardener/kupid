@@ -7,9 +7,9 @@
 set -e
 
 root_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
-TOOLS_BIN_DIR="${root_dir}/hack/bin"
+TOOLS_BIN_DIR="${root_dir}/hack/tools/bin"
 
-gosec_report="true"
+gosec_report="false"
 gosec_report_parse_flags=""
 
 parse_flags() {
@@ -38,8 +38,8 @@ fi
 
 # KUPID uses code-generators https://github.com/kubernetes/code-generator which create lots of G103 (CWE-242:
 # Use of unsafe calls should be audited) & G104 (CWE-703: Errors unhandled) errors.
-# However, those generators are best-pratice in Kubernetes environment and their results are tested well.
+# However, those generators are best-practice in Kubernetes environment and their results are tested well.
 # Thus, generated code is excluded from gosec scan.
 # Nested go modules are not supported by gosec (see https://github.com/securego/gosec/issues/501), so the ./hack folder
 # is excluded too. It does not contain productive code anyway.
-${TOOLS_BIN_DIR}/gosec -exclude-generated -exclude-dir=hack $gosec_report_parse_flags ./...
+${TOOLS_BIN_DIR}/gosec -exclude-generated -exclude-dir=hack -exclude-dir=tmp $gosec_report_parse_flags ./...
