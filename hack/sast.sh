@@ -9,7 +9,7 @@ set -e
 root_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 TOOLS_BIN_DIR="${root_dir}/hack/bin"
 
-gosec_report="false"
+gosec_report="true"
 gosec_report_parse_flags=""
 
 parse_flags() {
