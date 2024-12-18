@@ -27,3 +27,6 @@ bin
 test/output
 
 .DS_Store
+
+# gosec
+gosec-report.sarif

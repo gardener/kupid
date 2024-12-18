@@ -1,5 +1,12 @@
 kupid:
   base_definition:
+    repo:
+      source_labels:
+        - name: cloud.gardener.cnudie/dso/scanning-hints/source_analysis/v1
+          value:
+            policy: skip
+            comment: |
+              we use gosec for sast scanning. See attached log.
     traits:
       version:
         preprocess:
@@ -48,6 +55,16 @@ kupid:
               image: europe-docker.pkg.dev/gardener-project/releases/gardener/kupid
         release:
           nextversion: 'bump_minor'
+          assets:
+            - type: build-step-log
+              step_name: check
+              purposes:
+                - lint
+                - sast
+                - gosec
+              comment: |
+                we use gosec (linter) for SAST scans
+                see: https://github.com/securego/gosec
         slack:
           default_channel: 'internal_scp_workspace'
           channel_cfgs:

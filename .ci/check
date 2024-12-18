@@ -50,3 +50,6 @@ echo "Running golint..."
 for dir in ${PACKAGES_DIRS}; do
   golint -set_exit_status $(find $dir -maxdepth 1 -name "*.go" | grep -vE 'zz_generated|_test.go')
 done
+
+# Run Static Application Security Testing (SAST) using gosec
+make sast-report

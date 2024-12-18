@@ -194,13 +194,13 @@ func writeCertificates(certDir string, caCert, serverCert *secrets.Certificate) 
 		serverCertPath = filepath.Join(certDir, secrets.DataKeyCertificate)
 	)
 
-	if err := os.MkdirAll(certDir, 0755); err != nil {
+	if err := os.MkdirAll(certDir, 0750); err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(serverKeyPath, serverCert.PrivateKeyPEM, 0666); err != nil {
+	if err := os.WriteFile(serverKeyPath, serverCert.PrivateKeyPEM, 0600); err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(serverCertPath, serverCert.CertificatePEM, 0666); err != nil {
+	if err := os.WriteFile(serverCertPath, serverCert.CertificatePEM, 0600); err != nil {
 		return nil, err
 	}
 

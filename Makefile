@@ -22,6 +22,8 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+include hack/tools.mk
+
 set-permissions:
 	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
 
@@ -41,6 +43,14 @@ verify: check test
 # Run checks
 check:
 	@.ci/check
+
+.PHONY: sast
+sast: $(GOSEC)
+	@./hack/sast.sh
+
+.PHONY: sast-report
+sast-report: $(GOSEC)
+	@./hack/sast.sh --gosec-report true
 
 # Run tests
 test: generate fmt vet manifests
