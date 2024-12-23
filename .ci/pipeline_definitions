@@ -24,6 +24,11 @@ kupid:
                 source: ~
               steps:
                 build: ~
+            resource_labels:
+              - name: 'cloud.gardener.cnudie/responsibles'
+                value:
+                  - type: 'githubTeam'
+                    teamname: 'gardener/kupid-maintainers'
     steps:
       check:
         image: 'golang:1.23.1'
