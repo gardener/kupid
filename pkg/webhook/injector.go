@@ -223,6 +223,7 @@ func mergeUniquePreferredSchedulingTerms(s []corev1.PreferredSchedulingTerm, mut
 
 func mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs []corev1.NodeSelectorTerm, log logr.Logger) []corev1.NodeSelectorTerm {
 	if podNSTs == nil || len(podNSTs) == 0 {
+		printDeltaUniqueNodeSelectorTerms(podNSTs, policyNSTs, log)
 		return policyNSTs
 	}
 	if policyNSTs == nil || len(policyNSTs) == 0 {
@@ -239,6 +240,10 @@ func mergeUniqueNodeSelectorTerms(policyNSTs, podNSTs []corev1.NodeSelectorTerm,
 }
 
 func printDeltaUniqueNodeSelectorTerms(podNSTs, updatedNSTs []corev1.NodeSelectorTerm, log logr.Logger) {
+	if (podNSTs == nil || len(podNSTs) == 0) && (updatedNSTs != nil && len(updatedNSTs) > 0) {
+		log.Info("Mutations made to RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms", "mutated NSTs", updatedNSTs)
+	}
+
 	var contains = func(podNSTs []corev1.NodeSelectorTerm, updatedNST corev1.NodeSelectorTerm) bool {
 		for _, podNST := range podNSTs {
 			if reflect.DeepEqual(podNST, updatedNST) {
