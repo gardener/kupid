@@ -1,4 +1,15 @@
 kupid:
+  templates: 
+    helmcharts:
+    - &kupid
+      name: kupid
+      dir: charts/gardener-extension-kupid
+      registry: europe-docker.pkg.dev/gardener-project/snapshots/charts/gardener/extensions
+      mappings:
+      - ref: ocm-resource:kupid.repository
+        attribute: image.repository
+      - ref: ocm-resource:kupid.tag
+        attribute: image.tag
   base_definition:
     repo:
       source_labels:
@@ -45,9 +56,15 @@ kupid:
           ocm_repository_mappings:
             - repository: europe-docker.pkg.dev/gardener-project/releases
         draft_release: ~
+        publish:
+          helmcharts:
+          - *kupid
     pull-request:
       traits:
         pull-request: ~
+        publish:
+          helmcharts:
+          - *kupid
     release:
       traits:
         version:
@@ -58,6 +75,9 @@ kupid:
           dockerimages:
             kupid:
               image: europe-docker.pkg.dev/gardener-project/releases/gardener/kupid
+          helmcharts:
+          - <<: *kupid
+            registry: europe-docker.pkg.dev/gardener-project/releases/charts/gardener/extensions
         release:
           nextversion: 'bump_minor'
           assets:
