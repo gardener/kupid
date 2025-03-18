@@ -33,4 +33,6 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: false
       terminationGracePeriodSeconds: 10

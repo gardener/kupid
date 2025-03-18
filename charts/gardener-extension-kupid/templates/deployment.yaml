@@ -75,6 +75,8 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
 {{- end }}
+        securityContext:
+          allowPrivilegeEscalation: false
         volumeMounts:
         - mountPath: /var/kupid/certs
           name: certs
