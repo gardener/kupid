@@ -20,6 +20,8 @@ spec:
         volumeMounts:
         - mountPath: /var/kupid/certs
           name: certs
+        securityContext:
+          allowPrivilegeEscalation: false
       volumes:
       - name: certs
         emptyDir: {}

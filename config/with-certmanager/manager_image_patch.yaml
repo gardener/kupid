@@ -8,6 +8,8 @@ spec:
     spec:
       containers:
       - name: kupid
+        securityContext:
+          allowPrivilegeEscalation: false
       volumeMounts:
         - mountPath: /var/kupid/certs
           name: webhook-server-tls
