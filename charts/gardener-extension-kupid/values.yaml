@@ -22,7 +22,7 @@ vpa:
     cpu: 100m
     memory: 64M
   updatePolicy:
-    updateMode: "Auto"
+    updateMode: "Recreate"
 
 manager:
   qps: 5.0
