@@ -10,7 +10,7 @@ IMG ?= $(IMAGE_REPOSITORY):$(IMAGE_TAG)
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
-CONTROLLER_GEN_REQVERSION := v0.6.2
+CONTROLLER_GEN_REQVERSION := v0.19.0
 
 # Set cert-manager version to deploy
 CERTMANAGER_VERSION := v1.12.0
