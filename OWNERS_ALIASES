@@ -1,0 +1,11 @@
+# See the OWNERS docs at https://go.k8s.io/owners
+
+aliases:
+  kupid-reviewers:
+  - ashwani2k
+  - shreyas-s-rao
+  - unmarshall
+  kupid-approvers:
+  - ashwani2k
+  - shreyas-s-rao
+  - unmarshall
