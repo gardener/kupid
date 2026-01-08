@@ -95,10 +95,9 @@ jobs:
         run: |
           set -eu
           mkdir -p /tmp/blobs.d
-          TEST_COV=yes \
-            .ci/test |& tee /tmp/blobs.d/verify-log.txt
+          .ci/test |& tee /tmp/blobs.d/test-log.txt
 
-          tar czf /tmp/blobs.d/verify-log.tar.gz -C /tmp/blobs.d verify-log.
+          tar czf /tmp/blobs.d/test-log.tar.gz -C /tmp/blobs.d test-log.
       - name: add-reports-to-component-descriptor
         uses: gardener/cc-utils/.github/actions/export-ocm-fragments@master
         with:
@@ -108,7 +107,7 @@ jobs:
               relation: local
               access:
                 type: localBlob
-                localReference: verify-log.tar.gz
+                localReference: test-log.tar.gz
               labels:
                 - name: gardener.cloud/purposes
                   value:
