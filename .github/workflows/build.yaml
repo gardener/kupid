@@ -94,4 +94,22 @@ jobs:
         shell: bash
         run: |
           set -eu
-          .ci/test
+          mkdir -p /tmp/blobs.d
+          TEST_COV=yes \
+            .ci/test |& tee /tmp/blobs.d/verify-log.txt
+
+          tar czf /tmp/blobs.d/verify-log.tar.gz -C /tmp/blobs.d verify-log.
+      - name: add-reports-to-component-descriptor
+        uses: gardener/cc-utils/.github/actions/export-ocm-fragments@master
+        with:
+          blobs-directory: /tmp/blobs.d
+          ocm-resources: |
+            - name: test-results
+              relation: local
+              access:
+                type: localBlob
+                localReference: verify-log.tar.gz
+              labels:
+                - name: gardener.cloud/purposes
+                  value:
+                    - test
