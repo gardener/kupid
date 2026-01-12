@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	uberzap "go.uber.org/zap"
@@ -215,11 +216,17 @@ func doRegisterWebhooks(mgr manager.Manager, certDir, namespace string, timeoutS
 
 	setupLog.Info("Registering webhooks if necessary.")
 
+	namespaceObj := &corev1.Namespace{}
+	if err := k8sClient.Get(ctx, client.ObjectKey{Name: namespace}, namespaceObj); err != nil {
+		return fmt.Errorf("failed to get namespace %s: %w", namespace, err)
+	}
+	namespaceUID := namespaceObj.UID
+
 	for _, f := range []webhookConfigGeneratorFn{
 		newValidatingWebhookConfig,
 		newMutatingWebhookConfig,
 	} {
-		obj, mutateFn := f(clientConfig, timeoutSeconds, webhookFailurePolicy)
+		obj, mutateFn := f(clientConfig, timeoutSeconds, webhookFailurePolicy, namespace, namespaceUID)
 		if _, err := controllerutil.CreateOrUpdate(ctx, k8sClient, obj, mutateFn); err != nil {
 			return err
 		}
@@ -251,10 +258,9 @@ func buildRuleWithOperations(gv schema.GroupVersion, resources []string, operati
 	}
 }
 
-type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) (client.Object, controllerutil.MutateFn)
+type webhookConfigGeneratorFn func(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType, extensionNamespace string, namespaceUID types.UID) (client.Object, controllerutil.MutateFn)
 
-// func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32) (client.Object, controllerutil.MutateFn) {
-func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) (client.Object, controllerutil.MutateFn) {
+func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType, extensionNamespace string, namespaceUID types.UID) (client.Object, controllerutil.MutateFn) {
 	var (
 		exact = admissionregistrationv1.Exact
 		none  = admissionregistrationv1.SideEffectClassNone
@@ -263,6 +269,9 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClie
 	obj := &admissionregistrationv1.ValidatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: webhookFullName,
+			OwnerReferences: []metav1.OwnerReference{
+				{APIVersion: "v1", Kind: "Namespace", Name: extensionNamespace, UID: namespaceUID},
+			},
 		},
 	}
 
@@ -294,7 +303,7 @@ func newValidatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClie
 	}
 }
 
-func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType) (client.Object, controllerutil.MutateFn) {
+func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClientConfig, timeoutSeconds int32, webhookFailurePolicy admissionregistrationv1.FailurePolicyType, extensionNamespace string, namespaceUID types.UID) (client.Object, controllerutil.MutateFn) {
 	var (
 		equivalent = admissionregistrationv1.Equivalent
 		none       = admissionregistrationv1.SideEffectClassNone
@@ -304,6 +313,9 @@ func newMutatingWebhookConfig(clientConfig admissionregistrationv1.WebhookClient
 	obj := &admissionregistrationv1.MutatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: webhookFullName,
+			OwnerReferences: []metav1.OwnerReference{
+				{APIVersion: "v1", Kind: "Namespace", Name: extensionNamespace, UID: namespaceUID},
+			},
 		},
 	}
 
