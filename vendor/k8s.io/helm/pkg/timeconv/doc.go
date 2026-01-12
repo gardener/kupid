@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*Package timeconv contains utilities for converting time.
+/*
+Package timeconv contains utilities for converting time.
 
 The gRPC/Protobuf libraries contain time implementations that require conversion
 to and from Go times. This library provides utilities and convenience functions
