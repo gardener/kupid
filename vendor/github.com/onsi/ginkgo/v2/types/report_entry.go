@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-//ReportEntryValue wraps a report entry's value ensuring it can be encoded and decoded safely into reports
-//and across the network connection when running in parallel
+// ReportEntryValue wraps a report entry's value ensuring it can be encoded and decoded safely into reports
+// and across the network connection when running in parallel
 type ReportEntryValue struct {
 	raw            interface{} //unexported to prevent gob from freaking out about unregistered structs
 	AsJSON         string

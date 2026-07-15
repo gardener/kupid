@@ -412,27 +412,31 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
-//   namespace: foo
+//
+//	name: reviews-route
+//	namespace: foo
+//
 // spec:
-//   hosts:
-//   - reviews # interpreted as reviews.foo.svc.cluster.local
-//   http:
-//   - match:
-//     - uri:
-//         prefix: "/wpcatalog"
-//     - uri:
-//         prefix: "/consumercatalog"
-//     rewrite:
-//       uri: "/newcatalog"
-//     route:
-//     - destination:
-//         host: reviews # interpreted as reviews.foo.svc.cluster.local
-//         subset: v2
-//   - route:
-//     - destination:
-//         host: reviews # interpreted as reviews.foo.svc.cluster.local
-//         subset: v1
+//
+//	hosts:
+//	- reviews # interpreted as reviews.foo.svc.cluster.local
+//	http:
+//	- match:
+//	  - uri:
+//	      prefix: "/wpcatalog"
+//	  - uri:
+//	      prefix: "/consumercatalog"
+//	  rewrite:
+//	    uri: "/newcatalog"
+//	  route:
+//	  - destination:
+//	      host: reviews # interpreted as reviews.foo.svc.cluster.local
+//	      subset: v2
+//	- route:
+//	  - destination:
+//	      host: reviews # interpreted as reviews.foo.svc.cluster.local
+//	      subset: v1
+//
 // ```
 // {{</tab>}}
 //
@@ -441,32 +445,36 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
-//   namespace: foo
+//
+//	name: reviews-route
+//	namespace: foo
+//
 // spec:
-//   hosts:
-//   - reviews # interpreted as reviews.foo.svc.cluster.local
-//   http:
-//   - match:
-//     - uri:
-//         prefix: "/wpcatalog"
-//     - uri:
-//         prefix: "/consumercatalog"
-//     rewrite:
-//       uri: "/newcatalog"
-//     route:
-//     - destination:
-//         host: reviews # interpreted as reviews.foo.svc.cluster.local
-//         subset: v2
-//   - route:
-//     - destination:
-//         host: reviews # interpreted as reviews.foo.svc.cluster.local
-//         subset: v1
+//
+//	hosts:
+//	- reviews # interpreted as reviews.foo.svc.cluster.local
+//	http:
+//	- match:
+//	  - uri:
+//	      prefix: "/wpcatalog"
+//	  - uri:
+//	      prefix: "/consumercatalog"
+//	  rewrite:
+//	    uri: "/newcatalog"
+//	  route:
+//	  - destination:
+//	      host: reviews # interpreted as reviews.foo.svc.cluster.local
+//	      subset: v2
+//	- route:
+//	  - destination:
+//	      host: reviews # interpreted as reviews.foo.svc.cluster.local
+//	      subset: v1
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
 //
-// And the associated DestinationRule
+// # And the associated DestinationRule
 //
 // {{<tabset category-name="example">}}
 // {{<tab name="v1alpha3" category-value="v1alpha3">}}
@@ -474,17 +482,21 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: DestinationRule
 // metadata:
-//   name: reviews-destination
-//   namespace: foo
+//
+//	name: reviews-destination
+//	namespace: foo
+//
 // spec:
-//   host: reviews # interpreted as reviews.foo.svc.cluster.local
-//   subsets:
-//   - name: v1
-//     labels:
-//       version: v1
-//   - name: v2
-//     labels:
-//       version: v2
+//
+//	host: reviews # interpreted as reviews.foo.svc.cluster.local
+//	subsets:
+//	- name: v1
+//	  labels:
+//	    version: v1
+//	- name: v2
+//	  labels:
+//	    version: v2
+//
 // ```
 // {{</tab>}}
 //
@@ -493,17 +505,21 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: DestinationRule
 // metadata:
-//   name: reviews-destination
-//   namespace: foo
+//
+//	name: reviews-destination
+//	namespace: foo
+//
 // spec:
-//   host: reviews # interpreted as reviews.foo.svc.cluster.local
-//   subsets:
-//   - name: v1
-//     labels:
-//       version: v1
-//   - name: v2
-//     labels:
-//       version: v2
+//
+//	host: reviews # interpreted as reviews.foo.svc.cluster.local
+//	subsets:
+//	- name: v1
+//	  labels:
+//	    version: v1
+//	- name: v2
+//	  labels:
+//	    version: v2
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -524,16 +540,20 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: my-productpage-rule
-//   namespace: istio-system
+//
+//	name: my-productpage-rule
+//	namespace: istio-system
+//
 // spec:
-//   hosts:
-//   - productpage.prod.svc.cluster.local # ignores rule namespace
-//   http:
-//   - timeout: 5s
-//     route:
-//     - destination:
-//         host: productpage.prod.svc.cluster.local
+//
+//	hosts:
+//	- productpage.prod.svc.cluster.local # ignores rule namespace
+//	http:
+//	- timeout: 5s
+//	  route:
+//	  - destination:
+//	      host: productpage.prod.svc.cluster.local
+//
 // ```
 // {{</tab>}}
 //
@@ -542,16 +562,20 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: my-productpage-rule
-//   namespace: istio-system
+//
+//	name: my-productpage-rule
+//	namespace: istio-system
+//
 // spec:
-//   hosts:
-//   - productpage.prod.svc.cluster.local # ignores rule namespace
-//   http:
-//   - timeout: 5s
-//     route:
-//     - destination:
-//         host: productpage.prod.svc.cluster.local
+//
+//	hosts:
+//	- productpage.prod.svc.cluster.local # ignores rule namespace
+//	http:
+//	- timeout: 5s
+//	  route:
+//	  - destination:
+//	      host: productpage.prod.svc.cluster.local
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -568,29 +592,37 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: ServiceEntry
 // metadata:
-//   name: external-svc-wikipedia
+//
+//	name: external-svc-wikipedia
+//
 // spec:
-//   hosts:
-//   - wikipedia.org
-//   location: MESH_EXTERNAL
-//   ports:
-//   - number: 80
-//     name: example-http
-//     protocol: HTTP
-//   resolution: DNS
+//
+//	hosts:
+//	- wikipedia.org
+//	location: MESH_EXTERNAL
+//	ports:
+//	- number: 80
+//	  name: example-http
+//	  protocol: HTTP
+//	resolution: DNS
+//
 // ---
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: my-wiki-rule
+//
+//	name: my-wiki-rule
+//
 // spec:
-//   hosts:
-//   - wikipedia.org
-//   http:
-//   - timeout: 5s
-//     route:
-//     - destination:
-//         host: wikipedia.org
+//
+//	hosts:
+//	- wikipedia.org
+//	http:
+//	- timeout: 5s
+//	  route:
+//	  - destination:
+//	      host: wikipedia.org
+//
 // ```
 // {{</tab>}}
 //
@@ -599,33 +631,40 @@ func (m *VirtualService) GetExportTo() []string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: ServiceEntry
 // metadata:
-//   name: external-svc-wikipedia
+//
+//	name: external-svc-wikipedia
+//
 // spec:
-//   hosts:
-//   - wikipedia.org
-//   location: MESH_EXTERNAL
-//   ports:
-//   - number: 80
-//     name: example-http
-//     protocol: HTTP
-//   resolution: DNS
+//
+//	hosts:
+//	- wikipedia.org
+//	location: MESH_EXTERNAL
+//	ports:
+//	- number: 80
+//	  name: example-http
+//	  protocol: HTTP
+//	resolution: DNS
+//
 // ---
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: my-wiki-rule
+//
+//	name: my-wiki-rule
+//
 // spec:
-//   hosts:
-//   - wikipedia.org
-//   http:
-//   - timeout: 5s
-//     route:
-//     - destination:
-//         host: wikipedia.org
+//
+//	hosts:
+//	- wikipedia.org
+//	http:
+//	- timeout: 5s
+//	  route:
+//	  - destination:
+//	      host: wikipedia.org
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-//
 type Destination struct {
 	// The name of a service from the service registry. Service
 	// names are looked up from the platform's service registry (e.g.,
@@ -923,57 +962,69 @@ func (m *HTTPRoute) GetHeaders() *Headers {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: bookinfo
+//
+//	name: bookinfo
+//
 // spec:
-//   hosts:
-//   - "bookinfo.com"
-//   gateways:
-//   - mygateway
-//   http:
-//   - match:
-//     - uri:
-//         prefix: "/productpage"
-//     delegate:
-//        name: productpage
-//        namespace: nsA
-//   - match:
-//     - uri:
-//         prefix: "/reviews"
-//     delegate:
-//         name: reviews
-//         namespace: nsB
+//
+//	hosts:
+//	- "bookinfo.com"
+//	gateways:
+//	- mygateway
+//	http:
+//	- match:
+//	  - uri:
+//	      prefix: "/productpage"
+//	  delegate:
+//	     name: productpage
+//	     namespace: nsA
+//	- match:
+//	  - uri:
+//	      prefix: "/reviews"
+//	  delegate:
+//	      name: reviews
+//	      namespace: nsB
+//
 // ```
 //
 // ```yaml
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: productpage
-//   namespace: nsA
+//
+//	name: productpage
+//	namespace: nsA
+//
 // spec:
-//   http:
-//   - match:
-//      - uri:
-//         prefix: "/productpage/v1/"
-//     route:
-//     - destination:
-//         host: productpage-v1.nsA.svc.cluster.local
-//   - route:
-//     - destination:
-//         host: productpage.nsA.svc.cluster.local
+//
+//	http:
+//	- match:
+//	   - uri:
+//	      prefix: "/productpage/v1/"
+//	  route:
+//	  - destination:
+//	      host: productpage-v1.nsA.svc.cluster.local
+//	- route:
+//	  - destination:
+//	      host: productpage.nsA.svc.cluster.local
+//
 // ```
 //
 // ```yaml
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: reviews
-//   namespace: nsB
+//
+//	name: reviews
+//	namespace: nsB
+//
 // spec:
-//   http:
-//   - route:
-//     - destination:
-//         host: reviews.nsB.svc.cluster.local
+//
+//	http:
+//	- route:
+//	  - destination:
+//	      host: reviews.nsB.svc.cluster.local
+//
 // ```
 type Delegate struct {
 	// Name specifies the name of the delegate VirtualService.
@@ -1047,28 +1098,32 @@ func (m *Delegate) GetNamespace() string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
+//
+//	name: reviews-route
+//
 // spec:
-//   hosts:
-//   - reviews.prod.svc.cluster.local
-//   http:
-//   - headers:
-//       request:
-//         set:
-//           test: "true"
-//     route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v2
-//       weight: 25
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v1
-//       headers:
-//         response:
-//           remove:
-//           - foo
-//       weight: 75
+//
+//	hosts:
+//	- reviews.prod.svc.cluster.local
+//	http:
+//	- headers:
+//	    request:
+//	      set:
+//	        test: "true"
+//	  route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v2
+//	    weight: 25
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v1
+//	    headers:
+//	      response:
+//	        remove:
+//	        - foo
+//	    weight: 75
+//
 // ```
 // {{</tab>}}
 //
@@ -1077,28 +1132,32 @@ func (m *Delegate) GetNamespace() string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
+//
+//	name: reviews-route
+//
 // spec:
-//   hosts:
-//   - reviews.prod.svc.cluster.local
-//   http:
-//   - headers:
-//       request:
-//         set:
-//           test: "true"
-//     route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v2
-//       weight: 25
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v1
-//       headers:
-//         response:
-//           remove:
-//           - foo
-//       weight: 75
+//
+//	hosts:
+//	- reviews.prod.svc.cluster.local
+//	http:
+//	- headers:
+//	    request:
+//	      set:
+//	        test: "true"
+//	  route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v2
+//	    weight: 25
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v1
+//	    headers:
+//	      response:
+//	        remove:
+//	        - foo
+//	    weight: 75
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -1240,27 +1299,31 @@ func (m *Headers_HeaderOperations) GetRemove() []string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-sni
+//
+//	name: bookinfo-sni
+//
 // spec:
-//   hosts:
-//   - "*.bookinfo.com"
-//   gateways:
-//   - mygateway
-//   tls:
-//   - match:
-//     - port: 443
-//       sniHosts:
-//       - login.bookinfo.com
-//     route:
-//     - destination:
-//         host: login.prod.svc.cluster.local
-//   - match:
-//     - port: 443
-//       sniHosts:
-//       - reviews.bookinfo.com
-//     route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
+//
+//	hosts:
+//	- "*.bookinfo.com"
+//	gateways:
+//	- mygateway
+//	tls:
+//	- match:
+//	  - port: 443
+//	    sniHosts:
+//	    - login.bookinfo.com
+//	  route:
+//	  - destination:
+//	      host: login.prod.svc.cluster.local
+//	- match:
+//	  - port: 443
+//	    sniHosts:
+//	    - reviews.bookinfo.com
+//	  route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//
 // ```
 // {{</tab>}}
 //
@@ -1269,27 +1332,31 @@ func (m *Headers_HeaderOperations) GetRemove() []string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-sni
+//
+//	name: bookinfo-sni
+//
 // spec:
-//   hosts:
-//   - "*.bookinfo.com"
-//   gateways:
-//   - mygateway
-//   tls:
-//   - match:
-//     - port: 443
-//       sniHosts:
-//       - login.bookinfo.com
-//     route:
-//     - destination:
-//         host: login.prod.svc.cluster.local
-//   - match:
-//     - port: 443
-//       sniHosts:
-//       - reviews.bookinfo.com
-//     route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
+//
+//	hosts:
+//	- "*.bookinfo.com"
+//	gateways:
+//	- mygateway
+//	tls:
+//	- match:
+//	  - port: 443
+//	    sniHosts:
+//	    - login.bookinfo.com
+//	  route:
+//	  - destination:
+//	      host: login.prod.svc.cluster.local
+//	- match:
+//	  - port: 443
+//	    sniHosts:
+//	    - reviews.bookinfo.com
+//	  route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -1363,18 +1430,22 @@ func (m *TLSRoute) GetRoute() []*RouteDestination {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-mongo
+//
+//	name: bookinfo-mongo
+//
 // spec:
-//   hosts:
-//   - mongo.prod.svc.cluster.local
-//   tcp:
-//   - match:
-//     - port: 27017
-//     route:
-//     - destination:
-//         host: mongo.backup.svc.cluster.local
-//         port:
-//           number: 5555
+//
+//	hosts:
+//	- mongo.prod.svc.cluster.local
+//	tcp:
+//	- match:
+//	  - port: 27017
+//	  route:
+//	  - destination:
+//	      host: mongo.backup.svc.cluster.local
+//	      port:
+//	        number: 5555
+//
 // ```
 // {{</tab>}}
 //
@@ -1383,18 +1454,22 @@ func (m *TLSRoute) GetRoute() []*RouteDestination {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-mongo
+//
+//	name: bookinfo-mongo
+//
 // spec:
-//   hosts:
-//   - mongo.prod.svc.cluster.local
-//   tcp:
-//   - match:
-//     - port: 27017
-//     route:
-//     - destination:
-//         host: mongo.backup.svc.cluster.local
-//         port:
-//           number: 5555
+//
+//	hosts:
+//	- mongo.prod.svc.cluster.local
+//	tcp:
+//	- match:
+//	  - port: 27017
+//	  route:
+//	  - destination:
+//	      host: mongo.backup.svc.cluster.local
+//	      port:
+//	        number: 5555
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -1470,21 +1545,25 @@ func (m *TCPRoute) GetRoute() []*RouteDestination {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - headers:
-//         end-user:
-//           exact: jason
-//       uri:
-//         prefix: "/ratings/v2/"
-//       ignoreUriCase: true
-//     route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - headers:
+//	      end-user:
+//	        exact: jason
+//	    uri:
+//	      prefix: "/ratings/v2/"
+//	    ignoreUriCase: true
+//	  route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//
 // ```
 // {{</tab>}}
 //
@@ -1493,21 +1572,25 @@ func (m *TCPRoute) GetRoute() []*RouteDestination {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - headers:
-//         end-user:
-//           exact: jason
-//       uri:
-//         prefix: "/ratings/v2/"
-//       ignoreUriCase: true
-//     route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - headers:
+//	      end-user:
+//	        exact: jason
+//	    uri:
+//	      prefix: "/ratings/v2/"
+//	    ignoreUriCase: true
+//	  route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -1758,20 +1841,24 @@ func (m *HTTPMatchRequest) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
+//
+//	name: reviews-route
+//
 // spec:
-//   hosts:
-//   - reviews.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v2
-//       weight: 25
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v1
-//       weight: 75
+//
+//	hosts:
+//	- reviews.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v2
+//	    weight: 25
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v1
+//	    weight: 75
+//
 // ```
 // {{</tab>}}
 //
@@ -1780,25 +1867,29 @@ func (m *HTTPMatchRequest) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
+//
+//	name: reviews-route
+//
 // spec:
-//   hosts:
-//   - reviews.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v2
-//       weight: 25
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v1
-//       weight: 75
+//
+//	hosts:
+//	- reviews.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v2
+//	    weight: 25
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v1
+//	    weight: 75
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
 //
-// And the associated DestinationRule
+// # And the associated DestinationRule
 //
 // {{<tabset category-name="example">}}
 // {{<tab name="v1alpha3" category-value="v1alpha3">}}
@@ -1806,16 +1897,20 @@ func (m *HTTPMatchRequest) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: DestinationRule
 // metadata:
-//   name: reviews-destination
+//
+//	name: reviews-destination
+//
 // spec:
-//   host: reviews.prod.svc.cluster.local
-//   subsets:
-//   - name: v1
-//     labels:
-//       version: v1
-//   - name: v2
-//     labels:
-//       version: v2
+//
+//	host: reviews.prod.svc.cluster.local
+//	subsets:
+//	- name: v1
+//	  labels:
+//	    version: v1
+//	- name: v2
+//	  labels:
+//	    version: v2
+//
 // ```
 // {{</tab>}}
 //
@@ -1824,16 +1919,20 @@ func (m *HTTPMatchRequest) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: DestinationRule
 // metadata:
-//   name: reviews-destination
+//
+//	name: reviews-destination
+//
 // spec:
-//   host: reviews.prod.svc.cluster.local
-//   subsets:
-//   - name: v1
-//     labels:
-//       version: v1
-//   - name: v2
-//     labels:
-//       version: v2
+//
+//	host: reviews.prod.svc.cluster.local
+//	subsets:
+//	- name: v1
+//	  labels:
+//	    version: v1
+//	- name: v2
+//	  labels:
+//	    version: v2
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -1848,18 +1947,22 @@ func (m *HTTPMatchRequest) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: reviews-route-two-domains
+//
+//	name: reviews-route-two-domains
+//
 // spec:
-//   hosts:
-//   - reviews.com
-//   http:
-//   - route:
-//     - destination:
-//         host: dev.reviews.com
-//       weight: 25
-//     - destination:
-//         host: reviews.com
-//       weight: 75
+//
+//	hosts:
+//	- reviews.com
+//	http:
+//	- route:
+//	  - destination:
+//	      host: dev.reviews.com
+//	    weight: 25
+//	  - destination:
+//	      host: reviews.com
+//	    weight: 75
+//
 // ```
 // {{</tab>}}
 //
@@ -1868,22 +1971,25 @@ func (m *HTTPMatchRequest) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: reviews-route-two-domains
+//
+//	name: reviews-route-two-domains
+//
 // spec:
-//   hosts:
-//   - reviews.com
-//   http:
-//   - route:
-//     - destination:
-//         host: dev.reviews.com
-//       weight: 25
-//     - destination:
-//         host: reviews.com
-//       weight: 75
+//
+//	hosts:
+//	- reviews.com
+//	http:
+//	- route:
+//	  - destination:
+//	      host: dev.reviews.com
+//	    weight: 25
+//	  - destination:
+//	      host: reviews.com
+//	    weight: 75
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-//
 type HTTPRouteDestination struct {
 	// Destination uniquely identifies the instances of a service
 	// to which the request/connection should be forwarded to.
@@ -2242,18 +2348,22 @@ func (m *TLSMatchAttributes) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - uri:
-//         exact: /v1/getProductRatings
-//     redirect:
-//       uri: /v1/bookRatings
-//       authority: newratings.default.svc.cluster.local
-//   ...
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - uri:
+//	      exact: /v1/getProductRatings
+//	  redirect:
+//	    uri: /v1/bookRatings
+//	    authority: newratings.default.svc.cluster.local
+//	...
+//
 // ```
 // {{</tab>}}
 //
@@ -2262,22 +2372,25 @@ func (m *TLSMatchAttributes) GetSourceNamespace() string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - uri:
-//         exact: /v1/getProductRatings
-//     redirect:
-//       uri: /v1/bookRatings
-//       authority: newratings.default.svc.cluster.local
-//   ...
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - uri:
+//	      exact: /v1/getProductRatings
+//	  redirect:
+//	    uri: /v1/bookRatings
+//	    authority: newratings.default.svc.cluster.local
+//	...
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-//
 type HTTPRedirect struct {
 	// On a redirect, overwrite the Path portion of the URL with this
 	// value. Note that the entire path will be replaced, irrespective of the
@@ -2421,20 +2534,24 @@ func (*HTTPRedirect) XXX_OneofWrappers() []interface{} {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - uri:
-//         prefix: /ratings
-//     rewrite:
-//       uri: /v1/bookRatings
-//     route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - uri:
+//	      prefix: /ratings
+//	  rewrite:
+//	    uri: /v1/bookRatings
+//	  route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//
 // ```
 // {{</tab>}}
 //
@@ -2443,24 +2560,27 @@ func (*HTTPRedirect) XXX_OneofWrappers() []interface{} {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - uri:
-//         prefix: /ratings
-//     rewrite:
-//       uri: /v1/bookRatings
-//     route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - uri:
+//	      prefix: /ratings
+//	  rewrite:
+//	    uri: /v1/bookRatings
+//	  route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-//
 type HTTPRewrite struct {
 	// rewrite the path (or the prefix) portion of the URI with this
 	// value. If the original URI was matched based on prefix, the value
@@ -2635,19 +2755,23 @@ func (*StringMatch) XXX_OneofWrappers() []interface{} {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
-//     retries:
-//       attempts: 3
-//       perTryTimeout: 2s
-//       retryOn: connect-failure,refused-stream,503
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//	  retries:
+//	    attempts: 3
+//	    perTryTimeout: 2s
+//	    retryOn: connect-failure,refused-stream,503
+//
 // ```
 // {{</tab>}}
 //
@@ -2656,23 +2780,26 @@ func (*StringMatch) XXX_OneofWrappers() []interface{} {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
-//     retries:
-//       attempts: 3
-//       perTryTimeout: 2s
-//       retryOn: gateway-error,connect-failure,refused-stream
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//	  retries:
+//	    attempts: 3
+//	    perTryTimeout: 2s
+//	    retryOn: gateway-error,connect-failure,refused-stream
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-//
 type HTTPRetry struct {
 	// Number of retries to be allowed for a given request. The interval
 	// between retries will be determined automatically (25ms+). When request
@@ -2774,25 +2901,29 @@ func (m *HTTPRetry) GetRetryRemoteLocalities() *types.BoolValue {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
-//     corsPolicy:
-//       allowOrigins:
-//       - exact: https://example.com
-//       allowMethods:
-//       - POST
-//       - GET
-//       allowCredentials: false
-//       allowHeaders:
-//       - X-Foo-Bar
-//       maxAge: "24h"
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//	  corsPolicy:
+//	    allowOrigins:
+//	    - exact: https://example.com
+//	    allowMethods:
+//	    - POST
+//	    - GET
+//	    allowCredentials: false
+//	    allowHeaders:
+//	    - X-Foo-Bar
+//	    maxAge: "24h"
+//
 // ```
 // {{</tab>}}
 //
@@ -2801,29 +2932,32 @@ func (m *HTTPRetry) GetRetryRemoteLocalities() *types.BoolValue {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
-//     corsPolicy:
-//       allowOrigins:
-//       - exact: https://example.com
-//       allowMethods:
-//       - POST
-//       - GET
-//       allowCredentials: false
-//       allowHeaders:
-//       - X-Foo-Bar
-//       maxAge: "24h"
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//	  corsPolicy:
+//	    allowOrigins:
+//	    - exact: https://example.com
+//	    allowMethods:
+//	    - POST
+//	    - GET
+//	    allowCredentials: false
+//	    allowHeaders:
+//	    - X-Foo-Bar
+//	    maxAge: "24h"
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-//
 type CorsPolicy struct {
 	// The list of origins that are allowed to perform CORS requests. The
 	// content will be serialized into the Access-Control-Allow-Origin
@@ -3016,23 +3150,27 @@ func (m *HTTPFaultInjection) GetAbort() *HTTPFaultInjection_Abort {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
+//
+//	name: reviews-route
+//
 // spec:
-//   hosts:
-//   - reviews.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - sourceLabels:
-//         env: prod
-//     route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v1
-//     fault:
-//       delay:
-//         percentage:
-//           value: 0.1
-//         fixedDelay: 5s
+//
+//	hosts:
+//	- reviews.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - sourceLabels:
+//	      env: prod
+//	  route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v1
+//	  fault:
+//	    delay:
+//	      percentage:
+//	        value: 0.1
+//	      fixedDelay: 5s
+//
 // ```
 // {{</tab>}}
 //
@@ -3041,23 +3179,27 @@ func (m *HTTPFaultInjection) GetAbort() *HTTPFaultInjection_Abort {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: reviews-route
+//
+//	name: reviews-route
+//
 // spec:
-//   hosts:
-//   - reviews.prod.svc.cluster.local
-//   http:
-//   - match:
-//     - sourceLabels:
-//         env: prod
-//     route:
-//     - destination:
-//         host: reviews.prod.svc.cluster.local
-//         subset: v1
-//     fault:
-//       delay:
-//         percentage:
-//           value: 0.1
-//         fixedDelay: 5s
+//
+//	hosts:
+//	- reviews.prod.svc.cluster.local
+//	http:
+//	- match:
+//	  - sourceLabels:
+//	      env: prod
+//	  route:
+//	  - destination:
+//	      host: reviews.prod.svc.cluster.local
+//	      subset: v1
+//	  fault:
+//	    delay:
+//	      percentage:
+//	        value: 0.1
+//	      fixedDelay: 5s
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
@@ -3184,20 +3326,24 @@ func (*HTTPFaultInjection_Delay) XXX_OneofWrappers() []interface{} {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
-//     fault:
-//       abort:
-//         percentage:
-//           value: 0.1
-//         httpStatus: 400
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//	  fault:
+//	    abort:
+//	      percentage:
+//	        value: 0.1
+//	      httpStatus: 400
+//
 // ```
 // {{</tab>}}
 //
@@ -3206,20 +3352,24 @@ func (*HTTPFaultInjection_Delay) XXX_OneofWrappers() []interface{} {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: ratings-route
+//
+//	name: ratings-route
+//
 // spec:
-//   hosts:
-//   - ratings.prod.svc.cluster.local
-//   http:
-//   - route:
-//     - destination:
-//         host: ratings.prod.svc.cluster.local
-//         subset: v1
-//     fault:
-//       abort:
-//         percentage:
-//           value: 0.1
-//         httpStatus: 400
+//
+//	hosts:
+//	- ratings.prod.svc.cluster.local
+//	http:
+//	- route:
+//	  - destination:
+//	      host: ratings.prod.svc.cluster.local
+//	      subset: v1
+//	  fault:
+//	    abort:
+//	      percentage:
+//	        value: 0.1
+//	      httpStatus: 400
+//
 // ```
 // {{</tab>}}
 // {{</tabset>}}
