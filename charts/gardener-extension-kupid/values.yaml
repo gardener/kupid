@@ -22,7 +22,7 @@ vpa:
     cpu: 100m
     memory: 64M
   updatePolicy:
-    updateMode: "Recreate"
+    updateMode: "InPlaceOrRecreate"
 
 manager:
   qps: 5.0
