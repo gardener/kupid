@@ -22,7 +22,8 @@ import (
 
 // Or returns a composite predicate that implements a logical OR of the predicates passed to it.
 // TODO: This is a copy of "sigs.k8s.io/controller-runtime/pkg/predicate.Or" with the addition of the InjectFunc.
-//  Delete this code once the upstream library supports the InjectFunc as well.
+//
+//	Delete this code once the upstream library supports the InjectFunc as well.
 func Or(predicates ...predicate.Predicate) predicate.Predicate {
 	return or{predicates}
 }

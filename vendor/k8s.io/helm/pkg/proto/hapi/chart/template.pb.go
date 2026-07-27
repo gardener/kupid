@@ -74,7 +74,9 @@ func init() {
 	proto.RegisterType((*Template)(nil), "hapi.chart.Template")
 }
 
-func init() { proto.RegisterFile("hapi/chart/template.proto", fileDescriptor_template_926c98477d6df5e9) }
+func init() {
+	proto.RegisterFile("hapi/chart/template.proto", fileDescriptor_template_926c98477d6df5e9)
+}
 
 var fileDescriptor_template_926c98477d6df5e9 = []byte{
 	// 107 bytes of a gzipped FileDescriptorProto

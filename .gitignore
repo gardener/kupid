@@ -25,6 +25,7 @@ bin
 
 bin
 test/output
+.claude
 
 .DS_Store
 
