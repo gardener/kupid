@@ -77,9 +77,7 @@ func init() {
 	proto.RegisterType((*Version)(nil), "hapi.version.Version")
 }
 
-func init() {
-	proto.RegisterFile("hapi/version/version.proto", fileDescriptor_version_10859f2d56ed17fa)
-}
+func init() { proto.RegisterFile("hapi/version/version.proto", fileDescriptor_version_10859f2d56ed17fa) }
 
 var fileDescriptor_version_10859f2d56ed17fa = []byte{
 	// 151 bytes of a gzipped FileDescriptorProto

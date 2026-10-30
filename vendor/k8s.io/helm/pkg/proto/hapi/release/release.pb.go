@@ -128,9 +128,7 @@ func init() {
 	proto.RegisterType((*Release)(nil), "hapi.release.Release")
 }
 
-func init() {
-	proto.RegisterFile("hapi/release/release.proto", fileDescriptor_release_fa600adfb1fffc82)
-}
+func init() { proto.RegisterFile("hapi/release/release.proto", fileDescriptor_release_fa600adfb1fffc82) }
 
 var fileDescriptor_release_fa600adfb1fffc82 = []byte{
 	// 256 bytes of a gzipped FileDescriptorProto
