@@ -59,16 +59,16 @@ type Report struct {
 	SpecReports SpecReports
 }
 
-// PreRunStats contains a set of stats captured before the test run begins.  This is primarily used
-// by Ginkgo's reporter to tell the user how many specs are in the current suite (PreRunStats.TotalSpecs)
-// and how many it intends to run (PreRunStats.SpecsThatWillRun) after applying any relevant focus or skip filters.
+//PreRunStats contains a set of stats captured before the test run begins.  This is primarily used
+//by Ginkgo's reporter to tell the user how many specs are in the current suite (PreRunStats.TotalSpecs)
+//and how many it intends to run (PreRunStats.SpecsThatWillRun) after applying any relevant focus or skip filters.
 type PreRunStats struct {
 	TotalSpecs       int
 	SpecsThatWillRun int
 }
 
-// Add is ued by Ginkgo's parallel aggregation mechanisms to combine test run reports form individual parallel processes
-// to form a complete final report.
+//Add is ued by Ginkgo's parallel aggregation mechanisms to combine test run reports form individual parallel processes
+//to form a complete final report.
 func (report Report) Add(other Report) Report {
 	report.SuiteSucceeded = report.SuiteSucceeded && other.SuiteSucceeded
 
@@ -230,13 +230,13 @@ func (report SpecReport) CombinedOutput() string {
 	return report.CapturedStdOutErr + "\n" + report.CapturedGinkgoWriterOutput
 }
 
-// Failed returns true if report.State is one of the SpecStateFailureStates
+//Failed returns true if report.State is one of the SpecStateFailureStates
 // (SpecStateFailed, SpecStatePanicked, SpecStateinterrupted, SpecStateAborted)
 func (report SpecReport) Failed() bool {
 	return report.State.Is(SpecStateFailureStates)
 }
 
-// FullText returns a concatenation of all the report.ContainerHierarchyTexts and report.LeafNodeText
+//FullText returns a concatenation of all the report.ContainerHierarchyTexts and report.LeafNodeText
 func (report SpecReport) FullText() string {
 	texts := []string{}
 	texts = append(texts, report.ContainerHierarchyTexts...)
@@ -246,7 +246,7 @@ func (report SpecReport) FullText() string {
 	return strings.Join(texts, " ")
 }
 
-// Labels returns a deduped set of all the spec's Labels.
+//Labels returns a deduped set of all the spec's Labels.
 func (report SpecReport) Labels() []string {
 	out := []string{}
 	seen := map[string]bool{}
@@ -268,7 +268,7 @@ func (report SpecReport) Labels() []string {
 	return out
 }
 
-// MatchesLabelFilter returns true if the spec satisfies the passed in label filter query
+//MatchesLabelFilter returns true if the spec satisfies the passed in label filter query
 func (report SpecReport) MatchesLabelFilter(query string) (bool, error) {
 	filter, err := ParseLabelFilter(query)
 	if err != nil {
@@ -277,29 +277,29 @@ func (report SpecReport) MatchesLabelFilter(query string) (bool, error) {
 	return filter(report.Labels()), nil
 }
 
-// FileName() returns the name of the file containing the spec
+//FileName() returns the name of the file containing the spec
 func (report SpecReport) FileName() string {
 	return report.LeafNodeLocation.FileName
 }
 
-// LineNumber() returns the line number of the leaf node
+//LineNumber() returns the line number of the leaf node
 func (report SpecReport) LineNumber() int {
 	return report.LeafNodeLocation.LineNumber
 }
 
-// FailureMessage() returns the failure message (or empty string if the test hasn't failed)
+//FailureMessage() returns the failure message (or empty string if the test hasn't failed)
 func (report SpecReport) FailureMessage() string {
 	return report.Failure.Message
 }
 
-// FailureLocation() returns the location of the failure (or an empty CodeLocation if the test hasn't failed)
+//FailureLocation() returns the location of the failure (or an empty CodeLocation if the test hasn't failed)
 func (report SpecReport) FailureLocation() CodeLocation {
 	return report.Failure.Location
 }
 
 type SpecReports []SpecReport
 
-// WithLeafNodeType returns the subset of SpecReports with LeafNodeType matching one of the requested NodeTypes
+//WithLeafNodeType returns the subset of SpecReports with LeafNodeType matching one of the requested NodeTypes
 func (reports SpecReports) WithLeafNodeType(nodeTypes NodeType) SpecReports {
 	count := 0
 	for i := range reports {
@@ -319,7 +319,7 @@ func (reports SpecReports) WithLeafNodeType(nodeTypes NodeType) SpecReports {
 	return out
 }
 
-// WithState returns the subset of SpecReports with State matching one of the requested SpecStates
+//WithState returns the subset of SpecReports with State matching one of the requested SpecStates
 func (reports SpecReports) WithState(states SpecState) SpecReports {
 	count := 0
 	for i := range reports {
@@ -338,7 +338,7 @@ func (reports SpecReports) WithState(states SpecState) SpecReports {
 	return out
 }
 
-// CountWithState returns the number of SpecReports with State matching one of the requested SpecStates
+//CountWithState returns the number of SpecReports with State matching one of the requested SpecStates
 func (reports SpecReports) CountWithState(states SpecState) int {
 	n := 0
 	for i := range reports {
@@ -349,7 +349,7 @@ func (reports SpecReports) CountWithState(states SpecState) int {
 	return n
 }
 
-// CountWithState returns the number of SpecReports that passed after multiple attempts
+//CountWithState returns the number of SpecReports that passed after multiple attempts
 func (reports SpecReports) CountOfFlakedSpecs() int {
 	n := 0
 	for i := range reports {
