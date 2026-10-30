@@ -35,6 +35,7 @@ It is enabled by the following extensions:
   - enum_stringer_all
 
 This package is subject to change.
+
 */
 package enumstringer
 
