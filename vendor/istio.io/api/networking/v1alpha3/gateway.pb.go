@@ -548,21 +548,17 @@ func (m *Gateway) GetSelector() map[string]string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: Gateway
 // metadata:
-//
-//	name: my-ingress
-//
+//   name: my-ingress
 // spec:
-//
-//	selector:
-//	  app: my-ingressgateway
-//	servers:
-//	- port:
-//	    number: 80
-//	    name: http2
-//	    protocol: HTTP2
-//	  hosts:
-//	  - "*"
-//
+//   selector:
+//     app: my-ingressgateway
+//   servers:
+//   - port:
+//       number: 80
+//       name: http2
+//       protocol: HTTP2
+//     hosts:
+//     - "*"
 // ```
 // {{</tab>}}
 //
@@ -571,26 +567,22 @@ func (m *Gateway) GetSelector() map[string]string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: Gateway
 // metadata:
-//
-//	name: my-ingress
-//
+//   name: my-ingress
 // spec:
-//
-//	selector:
-//	  app: my-ingressgateway
-//	servers:
-//	- port:
-//	    number: 80
-//	    name: http2
-//	    protocol: HTTP2
-//	  hosts:
-//	  - "*"
-//
+//   selector:
+//     app: my-ingressgateway
+//   servers:
+//   - port:
+//       number: 80
+//       name: http2
+//       protocol: HTTP2
+//     hosts:
+//     - "*"
 // ```
 // {{</tab>}}
 // {{</tabset>}}
 //
-// # Another example
+// Another example
 //
 // {{<tabset category-name="example">}}
 // {{<tab name="v1alpha3" category-value="v1alpha3">}}
@@ -598,21 +590,17 @@ func (m *Gateway) GetSelector() map[string]string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: Gateway
 // metadata:
-//
-//	name: my-tcp-ingress
-//
+//   name: my-tcp-ingress
 // spec:
-//
-//	selector:
-//	  app: my-tcp-ingressgateway
-//	servers:
-//	- port:
-//	    number: 27018
-//	    name: mongo
-//	    protocol: MONGO
-//	  hosts:
-//	  - "*"
-//
+//   selector:
+//     app: my-tcp-ingressgateway
+//   servers:
+//   - port:
+//       number: 27018
+//       name: mongo
+//       protocol: MONGO
+//     hosts:
+//     - "*"
 // ```
 // {{</tab>}}
 //
@@ -621,26 +609,22 @@ func (m *Gateway) GetSelector() map[string]string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: Gateway
 // metadata:
-//
-//	name: my-tcp-ingress
-//
+//   name: my-tcp-ingress
 // spec:
-//
-//	selector:
-//	  app: my-tcp-ingressgateway
-//	servers:
-//	- port:
-//	    number: 27018
-//	    name: mongo
-//	    protocol: MONGO
-//	  hosts:
-//	  - "*"
-//
+//   selector:
+//     app: my-tcp-ingressgateway
+//   servers:
+//   - port:
+//       number: 27018
+//       name: mongo
+//       protocol: MONGO
+//     hosts:
+//     - "*"
 // ```
 // {{</tab>}}
 // {{</tabset>}}
 //
-// # The following is an example of TLS configuration for port 443
+// The following is an example of TLS configuration for port 443
 //
 // {{<tabset category-name="example">}}
 // {{<tab name="v1alpha3" category-value="v1alpha3">}}
@@ -648,25 +632,21 @@ func (m *Gateway) GetSelector() map[string]string {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: Gateway
 // metadata:
-//
-//	name: my-tls-ingress
-//
+//   name: my-tls-ingress
 // spec:
-//
-//	selector:
-//	  app: my-tls-ingressgateway
-//	servers:
-//	- port:
-//	    number: 443
-//	    name: https
-//	    protocol: HTTPS
-//	  hosts:
-//	  - "*"
-//	  tls:
-//	    mode: SIMPLE
-//	    serverCertificate: /etc/certs/server.pem
-//	    privateKey: /etc/certs/privatekey.pem
-//
+//   selector:
+//     app: my-tls-ingressgateway
+//   servers:
+//   - port:
+//       number: 443
+//       name: https
+//       protocol: HTTPS
+//     hosts:
+//     - "*"
+//     tls:
+//       mode: SIMPLE
+//       serverCertificate: /etc/certs/server.pem
+//       privateKey: /etc/certs/privatekey.pem
 // ```
 // {{</tab>}}
 //
@@ -675,28 +655,25 @@ func (m *Gateway) GetSelector() map[string]string {
 // apiVersion: networking.istio.io/v1beta1
 // kind: Gateway
 // metadata:
-//
-//	name: my-tls-ingress
-//
+//   name: my-tls-ingress
 // spec:
-//
-//	selector:
-//	  app: my-tls-ingressgateway
-//	servers:
-//	- port:
-//	    number: 443
-//	    name: https
-//	    protocol: HTTPS
-//	  hosts:
-//	  - "*"
-//	  tls:
-//	    mode: SIMPLE
-//	    serverCertificate: /etc/certs/server.pem
-//	    privateKey: /etc/certs/privatekey.pem
-//
+//   selector:
+//     app: my-tls-ingressgateway
+//   servers:
+//   - port:
+//       number: 443
+//       name: https
+//       protocol: HTTPS
+//     hosts:
+//     - "*"
+//     tls:
+//       mode: SIMPLE
+//       serverCertificate: /etc/certs/server.pem
+//       privateKey: /etc/certs/privatekey.pem
 // ```
 // {{</tab>}}
 // {{</tabset>}}
+//
 type Server struct {
 	// The Port on which the proxy should listen for incoming
 	// connections.

@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-Package manifest contains tools for working with kubernetes manifests.
+/*Package manifest contains tools for working with kubernetes manifests.
 
 Much like other parts of helm, it does not generally require that the manifests
 be correct yaml, so these functions can be run on broken manifests to aid in
